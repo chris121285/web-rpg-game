@@ -1,0 +1,28 @@
+{
+  "name": "web-rpg-game",
+  "version": "1.0.0",
+  "description": "Web-based RPG game like DND with player and DM sides",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chris121285/web-rpg-game.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/chris121285/web-rpg-game/issues"
+  },
+  "homepage": "https://github.com/chris121285/web-rpg-game#readme",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
+    "express": "^5.1.0"
+  }
+}

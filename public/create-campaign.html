@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Campaign - RPG Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle at top, #1c1f3a, #090a12);
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Fantasy decorations - lighter so form is prominent */
+        .deco-char {
+            position: fixed;
+            font-size: 60px;
+            opacity: 0.08;
+            animation: float-gentle 15s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        @keyframes float-gentle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-30px); }
+        }
+
+        .deco1 { top: 10%; left: 5%; animation-delay: 0s; }
+        .deco2 { top: 70%; right: 8%; animation-delay: 3s; }
+        .deco3 { bottom: 20%; left: 10%; font-size: 50px; animation-delay: 6s; }
+
+        .glow {
+            position: fixed;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(127, 156, 255, 0.1), transparent);
+            filter: blur(60px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .glow1 {
+            top: 15%;
+            right: 20%;
+            width: 250px;
+            height: 250px;
+        }
+
+        .glow2 {
+            bottom: 20%;
+            left: 15%;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(168, 103, 255, 0.1), transparent);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(127, 156, 255, 0.2);
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 0;
+            left: 0;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(127, 156, 255, 0.3);
+            border-radius: 8px;
+            color: #c7c9ff;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(-5px);
+        }
+
+        h1 {
+            font-size: 42px;
+            background: linear-gradient(90deg, #7f9cff, #a867ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: #c7c9ff;
+            opacity: 0.8;
+        }
+
+        .form-section {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(127, 156, 255, 0.2);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .section-title {
+            font-size: 20px;
+            color: #7f9cff;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(127, 156, 255, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-row {
+            margin-bottom: 20px;
+        }
+
+        .form-row.half {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #c7c9ff;
+            font-weight: 500;
+        }
+
+        label .required {
+            color: #ff8888;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(127, 156, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(127, 156, 255, 0.6);
+            box-shadow: 0 0 20px rgba(127, 156, 255, 0.2);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        option {
+            background: #1a1d35;
+            color: white;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            cursor: pointer;
+        }
+
+        .help-text {
+            font-size: 13px;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .tone-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .tone-option {
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(127, 156, 255, 0.2);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tone-option:hover {
+            background: rgba(127, 156, 255, 0.1);
+            border-color: rgba(127, 156, 255, 0.4);
+        }
+
+        .tone-option.selected {
+            background: rgba(127, 156, 255, 0.2);
+            border-color: rgba(127, 156, 255, 0.6);
+        }
+
+        .tone-option input[type="radio"] {
+            display: none;
+        }
+
+        .submit-section {
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .submit-btn {
+            padding: 16px 48px;
+            font-size: 18px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #4b6bff, #7b5cff);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 20px rgba(75, 107, 255, 0.4);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 30px rgba(75, 107, 255, 0.6);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .error-message {
+            background: rgba(255, 136, 136, 0.1);
+            border: 1px solid rgba(255, 136, 136, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            color: #ff8888;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        /* Success modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .success-modal {
+            background: linear-gradient(135deg, rgba(28, 31, 58, 0.95), rgba(9, 10, 18, 0.95));
+            border: 2px solid rgba(127, 156, 255, 0.4);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .success-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            animation: bounce 0.6s ease-out;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .success-title {
+            font-size: 32px;
+            background: linear-gradient(90deg, #7f9cff, #a867ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+        }
+
+        .success-message {
+            color: #c7c9ff;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .campaign-code-box {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(127, 156, 255, 0.5);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .code-label {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .campaign-code {
+            font-size: 36px;
+            font-weight: bold;
+            letter-spacing: 8px;
+            color: #7f9cff;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 20px rgba(127, 156, 255, 0.5);
+        }
+
+        .copy-btn {
+            margin-top: 15px;
+            padding: 10px 24px;
+            background: rgba(127, 156, 255, 0.2);
+            border: 1px solid rgba(127, 156, 255, 0.4);
+            border-radius: 6px;
+            color: #7f9cff;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .copy-btn:hover {
+            background: rgba(127, 156, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .copy-btn.copied {
+            background: rgba(100, 255, 100, 0.2);
+            border-color: rgba(100, 255, 100, 0.4);
+            color: #6f6;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+        }
+
+        .modal-btn {
+            padding: 12px 32px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4b6bff, #7b5cff);
+            color: white;
+            box-shadow: 0 4px 15px rgba(75, 107, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(75, 107, 255, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(127, 156, 255, 0.3);
+            color: #c7c9ff;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .form-row.half {
+                grid-template-columns: 1fr;
+            }
+
+            .tone-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background decorations -->
+    <div class="glow glow1"></div>
+    <div class="glow glow2"></div>
+    <div class="deco-char deco1">📖</div>
+    <div class="deco-char deco2">🎲</div>
+    <div class="deco-char deco3">⚔️</div>
+
+    <div class="container">
+        <header>
+            <a href="/dashboard" class="back-btn">← Back to Dashboard</a>
+            <h1>🎲 Create New Campaign</h1>
+            <div class="subtitle">Set up your epic adventure</div>
+        </header>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <form id="campaignForm">
+            <!-- Basic Information -->
+            <div class="form-section">
+                <div class="section-title">
+                    📜 Basic Information
+                </div>
+
+                <div class="form-row">
+                    <label for="campaignName">
+                        Campaign Name <span class="required">*</span>
+                    </label>
+                    <input type="text" id="campaignName" name="campaignName"
+                           placeholder="Enter an epic campaign name..." required>
+                </div>
+
+                <div class="form-row half">
+                    <div>
+                        <label for="gameSystem">
+                            Game System <span class="required">*</span>
+                        </label>
+                        <select id="gameSystem" name="gameSystem" required>
+                            <option value="">Select a system...</option>
+                            <option value="dnd5e">D&D 5th Edition</option>
+                            <option value="pathfinder2e">Pathfinder 2E</option>
+                            <option value="pathfinder1e">Pathfinder 1E</option>
+                            <option value="dnd3.5">D&D 3.5</option>
+                            <option value="other">Other / Homebrew</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="startingLevel">
+                            Starting Level <span class="required">*</span>
+                        </label>
+                        <input type="number" id="startingLevel" name="startingLevel"
+                               min="1" max="20" value="1" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <label for="setting">
+                        Campaign Setting
+                    </label>
+                    <input type="text" id="setting" name="setting"
+                           placeholder="e.g., Forgotten Realms, Homebrew, Eberron...">
+                    <div class="help-text">The world where your adventure takes place</div>
+                </div>
+
+                <div class="form-row">
+                    <label for="description">
+                        Campaign Description <span class="required">*</span>
+                    </label>
+                    <textarea id="description" name="description"
+                              placeholder="Describe the campaign's premise, main conflicts, and what makes it unique..."
+                              required></textarea>
+                    <div class="help-text">Help players understand what to expect</div>
+                </div>
+            </div>
+
+            <!-- Campaign Details -->
+            <div class="form-section">
+                <div class="section-title">
+                    ⚙️ Campaign Details
+                </div>
+
+                <div class="form-row half">
+                    <div>
+                        <label for="maxPlayers">
+                            Maximum Players <span class="required">*</span>
+                        </label>
+                        <input type="number" id="maxPlayers" name="maxPlayers"
+                               min="2" max="10" value="4" required>
+                    </div>
+
+                    <div>
+                        <label for="sessionFrequency">
+                            Session Frequency
+                        </label>
+                        <select id="sessionFrequency" name="sessionFrequency">
+                            <option value="weekly">Weekly</option>
+                            <option value="biweekly">Bi-weekly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="flexible">Flexible</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <label>
+                        Campaign Tone <span class="required">*</span>
+                    </label>
+                    <div class="tone-options">
+                        <label class="tone-option">
+                            <input type="radio" name="tone" value="serious" required>
+                            <div>🎭 Serious</div>
+                        </label>
+                        <label class="tone-option">
+                            <input type="radio" name="tone" value="balanced">
+                            <div>⚖️ Balanced</div>
+                        </label>
+                        <label class="tone-option">
+                            <input type="radio" name="tone" value="lighthearted">
+                            <div>😄 Lighthearted</div>
+                        </label>
+                        <label class="tone-option">
+                            <input type="radio" name="tone" value="comedic">
+                            <div>🤣 Comedic</div>
+                        </label>
+                        <label class="tone-option">
+                            <input type="radio" name="tone" value="dark">
+                            <div>🌑 Dark</div>
+                        </label>
+                        <label class="tone-option">
+                            <input type="radio" name="tone" value="grimdark">
+                            <div>💀 Grimdark</div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-row half">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="homebrewAllowed" name="homebrewAllowed">
+                        <label for="homebrewAllowed">Allow Homebrew Content</label>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="newPlayersWelcome" name="newPlayersWelcome">
+                        <label for="newPlayersWelcome">New Players Welcome</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Options -->
+            <div class="form-section">
+                <div class="section-title">
+                    ⭐ Additional Options
+                </div>
+
+                <div class="form-row">
+                    <label for="combatStyle">
+                        Combat Style Preference
+                    </label>
+                    <select id="combatStyle" name="combatStyle">
+                        <option value="balanced">Balanced</option>
+                        <option value="tactical">Tactical / Strategic</option>
+                        <option value="narrative">Narrative-focused</option>
+                        <option value="heavy">Combat-heavy</option>
+                        <option value="light">Combat-light</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <label for="rpFocus">
+                        Roleplay Focus
+                    </label>
+                    <select id="rpFocus" name="rpFocus">
+                        <option value="balanced">Balanced</option>
+                        <option value="high">High RP</option>
+                        <option value="medium">Medium RP</option>
+                        <option value="low">Low RP</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <label for="houseRules">
+                        House Rules / Special Notes
+                    </label>
+                    <textarea id="houseRules" name="houseRules"
+                              placeholder="Any special rules, modifications, or important information players should know..."></textarea>
+                </div>
+            </div>
+
+            <div class="submit-section">
+                <button type="submit" class="submit-btn">🎲 Create Campaign</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal-overlay" id="successModal">
+        <div class="success-modal">
+            <div class="success-icon">🎉</div>
+            <div class="success-title">Campaign Created!</div>
+            <div class="success-message">
+                Your campaign has been created successfully. Share this code with your players so they can join!
+            </div>
+
+            <div class="campaign-code-box">
+                <div class="code-label">Campaign Code</div>
+                <div class="campaign-code" id="displayCode">------</div>
+                <button class="copy-btn" id="copyCodeBtn" onclick="copyCode()">
+                    📋 Copy Code
+                </button>
+            </div>
+
+            <div class="modal-actions">
+                <button class="modal-btn btn-primary" onclick="goToDashboard()">
+                    Go to Dashboard
+                </button>
+                <button class="modal-btn btn-secondary" onclick="createAnother()">
+                    Create Another
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Handle tone selection visual feedback
+        document.querySelectorAll('.tone-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.tone-option').forEach(opt =>
+                    opt.classList.remove('selected')
+                );
+                this.classList.add('selected');
+                this.querySelector('input[type="radio"]').checked = true;
+            });
+        });
+
+        // Handle form submission
+        document.getElementById('campaignForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.style.display = 'none';
+
+            // Get user info
+            const userStr = localStorage.getItem('user');
+            if (!userStr) {
+                window.location.href = '/login.html';
+                return;
+            }
+            const user = JSON.parse(userStr);
+
+            // Gather form data
+            const formData = {
+                name: document.getElementById('campaignName').value.trim(),
+                dmUserId: user.id,
+                gameSystem: document.getElementById('gameSystem').value,
+                startingLevel: parseInt(document.getElementById('startingLevel').value),
+                setting: document.getElementById('setting').value.trim(),
+                description: document.getElementById('description').value.trim(),
+                maxPlayers: parseInt(document.getElementById('maxPlayers').value),
+                sessionFrequency: document.getElementById('sessionFrequency').value,
+                tone: document.querySelector('input[name="tone"]:checked')?.value,
+                homebrewAllowed: document.getElementById('homebrewAllowed').checked,
+                newPlayersWelcome: document.getElementById('newPlayersWelcome').checked,
+                combatStyle: document.getElementById('combatStyle').value,
+                rpFocus: document.getElementById('rpFocus').value,
+                houseRules: document.getElementById('houseRules').value.trim(),
+                players: [],
+                npcs: [],
+                created: new Date().toISOString()
+            };
+
+            // Validate tone selection
+            if (!formData.tone) {
+                errorMessage.textContent = 'Please select a campaign tone';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            try {
+                const response = await fetch('/campaigns', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Success! Show the campaign code
+                    document.getElementById('displayCode').textContent = data.campaign.code;
+                    document.getElementById('successModal').classList.add('show');
+                } else {
+                    errorMessage.textContent = data.error || 'Failed to create campaign';
+                    errorMessage.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                errorMessage.textContent = 'An error occurred. Please try again.';
+                errorMessage.style.display = 'block';
+            }
+        });
+
+        // Copy code to clipboard
+        function copyCode() {
+            const code = document.getElementById('displayCode').textContent;
+            const btn = document.getElementById('copyCodeBtn');
+
+            navigator.clipboard.writeText(code).then(() => {
+                btn.textContent = '✅ Copied!';
+                btn.classList.add('copied');
+
+                setTimeout(() => {
+                    btn.textContent = '📋 Copy Code';
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        // Navigate to dashboard
+        function goToDashboard() {
+            window.location.href = '/dashboard';
+        }
+
+        // Create another campaign
+        function createAnother() {
+            window.location.reload();
+        }
+    </script>
+</body>
+</html>

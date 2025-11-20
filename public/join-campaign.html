@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join Campaign - RPG Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle at top, #1c1f3a, #090a12);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Decorative elements */
+        .deco {
+            position: fixed;
+            font-size: 70px;
+            opacity: 0.1;
+            animation: float 15s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-40px) rotate(10deg); }
+        }
+
+        .deco1 { top: 15%; left: 10%; animation-delay: 0s; }
+        .deco2 { bottom: 20%; right: 12%; animation-delay: 3s; }
+        .deco3 { top: 60%; left: 8%; font-size: 50px; animation-delay: 6s; }
+
+        .glow {
+            position: fixed;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(127, 156, 255, 0.15), transparent);
+            filter: blur(60px);
+            pointer-events: none;
+        }
+
+        .glow1 {
+            top: 20%;
+            right: 25%;
+            width: 300px;
+            height: 300px;
+        }
+
+        .glow2 {
+            bottom: 15%;
+            left: 20%;
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, rgba(168, 103, 255, 0.15), transparent);
+        }
+
+        .join-container {
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid rgba(127, 156, 255, 0.3);
+            border-radius: 20px;
+            padding: 50px 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 10;
+        }
+
+        .back-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #7f9cff;
+            text-decoration: none;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            color: #a867ff;
+            transform: translateX(-5px);
+        }
+
+        .icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        h1 {
+            font-size: 36px;
+            background: linear-gradient(90deg, #7f9cff, #a867ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #c7c9ff;
+            margin-bottom: 40px;
+            font-size: 16px;
+        }
+
+        .code-input-group {
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: #c7c9ff;
+            text-align: left;
+        }
+
+        .code-input {
+            width: 100%;
+            padding: 18px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(127, 156, 255, 0.3);
+            border-radius: 12px;
+            color: white;
+            font-size: 24px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            letter-spacing: 6px;
+            text-align: center;
+            text-transform: uppercase;
+            transition: all 0.3s;
+        }
+
+        .code-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(127, 156, 255, 0.6);
+            box-shadow: 0 0 30px rgba(127, 156, 255, 0.3);
+        }
+
+        .code-input::placeholder {
+            color: rgba(199, 201, 255, 0.3);
+            letter-spacing: 4px;
+        }
+
+        .join-btn {
+            width: 100%;
+            padding: 16px;
+            font-size: 18px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #4b6bff, #7b5cff);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 20px rgba(75, 107, 255, 0.4);
+        }
+
+        .join-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 30px rgba(75, 107, 255, 0.6);
+        }
+
+        .join-btn:active {
+            transform: translateY(0);
+        }
+
+        .join-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .message.error {
+            background: rgba(255, 136, 136, 0.1);
+            border: 1px solid rgba(255, 136, 136, 0.3);
+            color: #ff8888;
+        }
+
+        .message.success {
+            background: rgba(100, 255, 100, 0.1);
+            border: 1px solid rgba(100, 255, 100, 0.3);
+            color: #6f6;
+        }
+
+        .help-text {
+            margin-top: 30px;
+            font-size: 13px;
+            color: #888;
+        }
+
+        .divider {
+            margin: 30px 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(127, 156, 255, 0.3), transparent);
+        }
+    </style>
+</head>
+<body>
+    <!-- Background -->
+    <div class="glow glow1"></div>
+    <div class="glow glow2"></div>
+    <div class="deco deco1">🗡️</div>
+    <div class="deco deco2">🎲</div>
+    <div class="deco deco3">⚔️</div>
+
+    <div class="join-container">
+        <a href="/dashboard" class="back-link">← Back to Dashboard</a>
+
+        <div class="icon">🏰</div>
+        <h1>Join Campaign</h1>
+        <div class="subtitle">Enter the campaign code provided by your DM</div>
+
+        <form id="joinForm">
+            <div class="code-input-group">
+                <label for="campaignCode">Campaign Code</label>
+                <input
+                    type="text"
+                    id="campaignCode"
+                    class="code-input"
+                    placeholder="ABCD12"
+                    maxlength="6"
+                    required
+                    autocomplete="off"
+                >
+            </div>
+
+            <button type="submit" class="join-btn" id="joinBtn">
+                🗡️ Join Campaign
+            </button>
+
+            <div class="message" id="message"></div>
+        </form>
+
+        <div class="divider"></div>
+
+        <div class="help-text">
+            Don't have a code? Ask your Dungeon Master to share the campaign code with you.
+        </div>
+    </div>
+
+    <script>
+        // Auto-uppercase the input
+        document.getElementById('campaignCode').addEventListener('input', function(e) {
+            e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        });
+
+        // Handle form submission
+        document.getElementById('joinForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const code = document.getElementById('campaignCode').value.trim();
+            const message = document.getElementById('message');
+            const btn = document.getElementById('joinBtn');
+
+            // Hide previous messages
+            message.style.display = 'none';
+            message.className = 'message';
+
+            // Validate code
+            if (code.length !== 6) {
+                message.textContent = 'Campaign code must be 6 characters';
+                message.classList.add('error');
+                message.style.display = 'block';
+                return;
+            }
+
+            // Get user info
+            const userStr = localStorage.getItem('user');
+            if (!userStr) {
+                window.location.href = '/login.html';
+                return;
+            }
+            const user = JSON.parse(userStr);
+
+            // Disable button
+            btn.disabled = true;
+            btn.textContent = 'Joining...';
+
+            try {
+                const response = await fetch('/campaigns/join', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: user.id,
+                        code: code
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    message.textContent = `Successfully joined "${data.campaign.name}"! Redirecting to character creation...`;
+                    message.classList.add('success');
+                    message.style.display = 'block';
+
+                    // Redirect to character creation after 1.5 seconds
+                    setTimeout(() => {
+                        window.location.href = `/character-creation.html?campaignId=${data.campaign.id}`;
+                    }, 1500);
+                } else {
+                    message.textContent = data.error || 'Failed to join campaign';
+                    message.classList.add('error');
+                    message.style.display = 'block';
+                    btn.disabled = false;
+                    btn.textContent = '🗡️ Join Campaign';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                message.textContent = 'An error occurred. Please try again.';
+                message.classList.add('error');
+                message.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = '🗡️ Join Campaign';
+            }
+        });
+    </script>
+</body>
+</html>

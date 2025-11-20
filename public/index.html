@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RPG Campaign Manager</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: radial-gradient(circle at top, #1c1f3a, #090a12);
+            color: #ffffff;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hero {
+            text-align: center;
+            max-width: 780px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        h1 {
+            font-size: 46px;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #7f9cff, #a867ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p {
+            font-size: 18px;
+            color: #c7c9ff;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 12px 22px;
+            font-size: 18px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            margin: 10px;
+            transition: 0.2s ease;
+            color: #fff;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #5271ff, #7a55ff);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #363b5c, #4d527b);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hero">
+        <h1>RPG Campaign Manager</h1>
+        <p>
+            Build epic stories. Create campaigns. Manage players.  
+            This tool gives your group a modern digital hub for all your tabletop adventures.
+        </p>
+
+        <button class="btn btn-primary" onclick="location.href='/login.html'">
+            Log In
+        </button>
+
+        <button class="btn btn-secondary" onclick="location.href='/register.html'">
+            Create Account
+        </button>
+    </div>
+
+</body>
+</html>

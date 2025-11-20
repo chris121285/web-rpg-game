@@ -1,0 +1,2562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Character - RPG Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
+            background: radial-gradient(ellipse at top, #1a1f3a 0%, #0d0f1a 100%);
+            color: #e0e6ff;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated gradient background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background:
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+            animation: gradientShift 15s ease infinite;
+            pointer-events: none;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(50px, 50px); }
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+        }
+
+        .character-sheet {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .sheet-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid rgba(99, 102, 241, 0.3);
+            position: relative;
+        }
+
+        .header-actions {
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: flex;
+            gap: 12px;
+        }
+
+        .sheet-title {
+            font-size: 48px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 40px rgba(129, 140, 248, 0.3);
+        }
+
+        .sheet-subtitle {
+            font-size: 16px;
+            color: #a5b4fc;
+            font-weight: 400;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(129, 140, 248, 0.2);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .section:hover {
+            border-color: rgba(129, 140, 248, 0.4);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #c7d2fe;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .form-grid.two-col {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .form-grid.three-col {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-helper-text {
+            font-size: 12px;
+            color: #a5b4fc;
+            margin-top: 6px;
+        }
+
+        .resistance-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .resistance-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(129, 140, 248, 0.4);
+            background: rgba(129, 140, 248, 0.12);
+            font-size: 13px;
+            color: #e0e6ff;
+        }
+
+        .resistance-chip input {
+            accent-color: #a78bfa;
+        }
+
+        label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #a5b4fc;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input, select, textarea {
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(129, 140, 248, 0.2);
+            border-radius: 10px;
+            color: #e0e6ff;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(129, 140, 248, 0.5);
+            box-shadow: 0 0 20px rgba(129, 140, 248, 0.2);
+        }
+
+        input::placeholder, textarea::placeholder {
+            color: rgba(165, 180, 252, 0.4);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+        }
+
+        .edit-toggle {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            color: #cbd5e1;
+        }
+
+        .toggle-label {
+            font-size: 12px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #94a3b8;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(148, 163, 184, 0.4);
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 2px;
+            background-color: #0f172a;
+            transition: .4s;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+
+        input:checked + .slider {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(23px);
+            background-color: #fff;
+        }
+
+        .ability-scores {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 16px;
+        }
+
+        .ability-box {
+            text-align: center;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.05));
+            border: 1px solid rgba(129, 140, 248, 0.3);
+            border-radius: 16px;
+            padding: 20px 12px;
+            transition: all 0.3s;
+        }
+
+        .ability-box:hover {
+            border-color: rgba(129, 140, 248, 0.6);
+            box-shadow: 0 0 24px rgba(129, 140, 248, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .ability-name {
+            font-size: 11px;
+            font-weight: 700;
+            color: #a5b4fc;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .ability-input {
+            width: 100%;
+            max-width: 100px;
+            height: 100px;
+            text-align: center;
+            font-size: 36px;
+            font-weight: 800;
+            margin: 0 auto;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(129, 140, 248, 0.3);
+            color: #818cf8;
+            display: block;
+            padding: 8px;
+        }
+
+        .ability-input:focus {
+            border-color: rgba(129, 140, 248, 0.8);
+            box-shadow: 0 0 30px rgba(129, 140, 248, 0.3);
+        }
+
+        /* Remove number input spinners */
+        .ability-input::-webkit-outer-spin-button,
+        .ability-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .ability-input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        .ability-modifier {
+            margin-top: 10px;
+            font-size: 16px;
+            color: #a78bfa;
+            font-weight: 700;
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .skill-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        .skill-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .skill-item label {
+            margin: 0;
+            cursor: pointer;
+            text-transform: none;
+            font-size: 14px;
+        }
+
+        .hp-ac-section {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .stat-box {
+            text-align: center;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.1));
+            border: 2px solid rgba(129, 140, 248, 0.3);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s;
+        }
+
+        .stat-box:hover {
+            border-color: rgba(129, 140, 248, 0.6);
+            box-shadow: 0 0 30px rgba(129, 140, 248, 0.2);
+            transform: translateY(-3px);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #a5b4fc;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-input {
+            width: 100%;
+            max-width: 100px;
+            height: 100px;
+            text-align: center;
+            font-size: 42px;
+            font-weight: 800;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(129, 140, 248, 0.3);
+            border-radius: 12px;
+            color: #818cf8;
+            display: block;
+        }
+
+        .stat-input:focus {
+            border-color: rgba(129, 140, 248, 0.8);
+            box-shadow: 0 0 30px rgba(129, 140, 248, 0.3);
+        }
+
+        /* Remove number input spinners for stat inputs */
+        .stat-input::-webkit-outer-spin-button,
+        .stat-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .stat-input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border: none;
+            border-radius: 14px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 36px rgba(99, 102, 241, 0.6);
+            background: linear-gradient(135deg, #818cf8, #a78bfa);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Checkbox Styles */
+        .help-text {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .checkbox-grid.skills-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: rgba(129, 140, 248, 0.05);
+            border: 2px solid rgba(129, 140, 248, 0.2);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .checkbox-item:hover {
+            background: rgba(129, 140, 248, 0.1);
+            border-color: rgba(129, 140, 248, 0.4);
+            transform: translateX(3px);
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #818cf8;
+        }
+
+        .checkbox-item input[type="checkbox"]:checked + span {
+            color: #a5b4fc;
+            font-weight: 600;
+        }
+
+        .checkbox-item span {
+            color: #c7d2fe;
+            font-size: 14px;
+            flex: 1;
+        }
+
+        .checkbox-item span em {
+            color: #94a3b8;
+            font-size: 12px;
+            font-style: italic;
+        }
+
+        .checkbox-item input[type="checkbox"]:checked {
+            transform: scale(1.1);
+        }
+
+        /* Proficiency dot indicator */
+        .proficiency-dot {
+            font-size: 16px;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+
+        .checkbox-item input[type="checkbox"] ~ span .proficiency-dot {
+            color: #64748b; /* Gray for not proficient */
+        }
+
+        .checkbox-item input[type="checkbox"]:checked ~ span .proficiency-dot {
+            color: #10b981; /* Green for proficient */
+        }
+
+        @media (max-width: 768px) {
+            .ability-scores {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .form-grid.two-col,
+            .form-grid.three-col {
+                grid-template-columns: 1fr;
+            }
+
+            .skills-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hp-ac-section {
+                grid-template-columns: 1fr;
+            }
+
+            .checkbox-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .checkbox-grid.skills-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            color: #fca5a5;
+            margin-bottom: 20px;
+            display: none;
+            font-weight: 600;
+        }
+
+        select option {
+            background: #1a1f3a;
+            color: #e0e6ff;
+        }
+
+        /* Profile Picture Styles */
+        .profile-upload-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.05));
+            border-radius: 16px;
+            border: 2px dashed rgba(129, 140, 248, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .profile-upload-container:hover {
+            border-color: rgba(129, 140, 248, 0.6);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.08));
+        }
+
+        .profile-preview {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 4px solid rgba(129, 140, 248, 0.4);
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .profile-preview:hover {
+            transform: scale(1.05);
+            border-color: rgba(129, 140, 248, 0.8);
+            box-shadow: 0 12px 48px rgba(129, 140, 248, 0.4);
+        }
+
+        .profile-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-placeholder {
+            font-size: 64px;
+            color: rgba(129, 140, 248, 0.5);
+        }
+
+        .upload-label {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+            color: white;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(129, 140, 248, 0.4);
+        }
+
+        .upload-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(129, 140, 248, 0.6);
+        }
+
+        .upload-label:active {
+            transform: translateY(0);
+        }
+
+        #profileImage {
+            display: none;
+        }
+
+        .upload-hint {
+            font-size: 12px;
+            color: #a5b4fc;
+            text-align: center;
+        }
+
+        .spell-columns {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+        }
+
+        .detail-tabs {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            border-bottom: 1px solid rgba(129, 140, 248, 0.2);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(129, 140, 248, 0.2);
+            border-bottom: none;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 12px;
+            cursor: pointer;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+
+        .tab-btn.active {
+            background: rgba(129, 140, 248, 0.1);
+            color: #c7d2fe;
+            border-color: rgba(129, 140, 248, 0.5);
+        }
+
+        .detail-tab {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .detail-tab.active {
+            display: block;
+        }
+
+        .spell-column {
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            padding: 15px;
+            background: rgba(15, 23, 42, 0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .spell-column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: #c7d2fe;
+        }
+
+        .chip-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .spell-chip {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            border-radius: 8px;
+            background: rgba(129, 140, 248, 0.1);
+            color: #e2e8f0;
+            font-size: 14px;
+        }
+
+        .chip-remove {
+            border: none;
+            background: transparent;
+            color: #f87171;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0 4px;
+        }
+
+        .chip-add-btn {
+            margin-top: 10px;
+            padding: 8px 14px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .helper-text {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 6px;
+        }
+
+        .inventory-editor {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 12px;
+            border: 1px solid rgba(129, 140, 248, 0.2);
+            border-radius: 10px;
+            background: rgba(15, 23, 42, 0.5);
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        .inventory-entry {
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            background: rgba(15, 23, 42, 0.4);
+        }
+
+        .inventory-empty {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 14px;
+            padding: 40px 10px;
+        }
+
+        .inventory-row {
+            display: grid;
+            grid-template-columns: minmax(180px, 1fr) 110px 120px 40px;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .inventory-select {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            background: rgba(255, 255, 255, 0.05);
+            color: #e2e8f0;
+            font-size: 14px;
+        }
+
+        .inventory-qty-control {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            color: #94a3b8;
+            font-size: 12px;
+        }
+
+        .inventory-qty-control input {
+            width: 80px;
+        }
+
+        .inventory-row input {
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            background: rgba(255, 255, 255, 0.05);
+            color: #e2e8f0;
+            font-size: 14px;
+        }
+
+        .inventory-equipped {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #cbd5f5;
+        }
+
+        .inventory-remove {
+            border: none;
+            background: rgba(239, 68, 68, 0.15);
+            color: #fda4af;
+            border-radius: 6px;
+            height: 32px;
+            cursor: pointer;
+        }
+
+        .inventory-custom-fields {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .inventory-description {
+            width: 100%;
+            min-height: 60px;
+            margin-bottom: 8px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            background: rgba(255, 255, 255, 0.05);
+            color: #e2e8f0;
+            font-size: 14px;
+        }
+
+        .inventory-details {
+            font-size: 12px;
+            color: #a5b4fc;
+            line-height: 1.4;
+        }
+
+        .inventory-modal {
+            background: rgba(15, 23, 42, 0.95);
+            border-radius: 16px;
+            padding: 20px;
+            width: 100%;
+            max-width: 520px;
+            border: 1px solid rgba(129, 140, 248, 0.3);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+        }
+
+        .spell-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            color: #e0e6ff;
+        }
+
+        .close-modal-btn {
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+            font-size: 22px;
+            cursor: pointer;
+        }
+
+        .spell-search {
+            width: 100%;
+            margin-bottom: 12px;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        .spell-modal-list {
+            max-height: 320px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .spell-option {
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .spell-option:hover {
+            border-color: rgba(129, 140, 248, 0.6);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .spell-option h4 {
+            margin: 0;
+            font-size: 15px;
+            color: #c7d2fe;
+        }
+
+        .spell-option span {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(8px);
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="character-sheet">
+            <div class="sheet-header">
+                <div class="header-actions">
+                    <button type="button" class="chip-add-btn" onclick="goToDashboard()">← Dashboard</button>
+                </div>
+                <div class="sheet-title">✏️ Edit Character</div>
+                <div class="sheet-subtitle">Update Your Hero</div>
+            </div>
+
+            <div class="edit-toggle">
+                <span class="toggle-label">Enable Editing</span>
+                <label class="switch">
+                    <input type="checkbox" id="editToggle" onchange="setEditMode(this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="error-message" id="errorMessage"></div>
+
+            <form id="characterForm">
+                <!-- Basic Information -->
+                <div class="section">
+                    <div class="section-title">📜 Basic Information</div>
+
+                    <!-- Profile Picture Upload -->
+                    <div class="profile-upload-container" style="margin-bottom: 25px;">
+                        <div class="profile-preview" id="profilePreview">
+                            <div class="profile-placeholder">👤</div>
+                        </div>
+                        <label for="profileImage" class="upload-label">
+                            📸 Upload Profile Picture
+                        </label>
+                        <input type="file" id="profileImage" accept="image/*">
+                        <div class="upload-hint">Recommended: Square image, max 2MB</div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="charName">Character Name *</label>
+                            <input type="text" id="charName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="race">Race *</label>
+                            <select id="race" required>
+                                <option value="">Select Race...</option>
+                                <option value="Human">Human</option>
+                                <option value="Elf">Elf</option>
+                                <option value="Dwarf">Dwarf</option>
+                                <option value="Halfling">Halfling</option>
+                                <option value="Dragonborn">Dragonborn</option>
+                                <option value="Gnome">Gnome</option>
+                                <option value="Half-Elf">Half-Elf</option>
+                                <option value="Half-Orc">Half-Orc</option>
+                                <option value="Tiefling">Tiefling</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="class">Class *</label>
+                            <select id="class" required>
+                                <option value="">Select Class...</option>
+                                <option value="Barbarian">Barbarian</option>
+                                <option value="Bard">Bard</option>
+                                <option value="Cleric">Cleric</option>
+                                <option value="Druid">Druid</option>
+                                <option value="Fighter">Fighter</option>
+                                <option value="Monk">Monk</option>
+                                <option value="Paladin">Paladin</option>
+                                <option value="Ranger">Ranger</option>
+                                <option value="Rogue">Rogue</option>
+                                <option value="Sorcerer">Sorcerer</option>
+                                <option value="Warlock">Warlock</option>
+                                <option value="Wizard">Wizard</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="level">Level *</label>
+                            <input type="number" id="level" min="1" max="20" value="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="background">Background</label>
+                            <input type="text" id="background" placeholder="e.g., Soldier, Sage">
+                        </div>
+                        <div class="form-group">
+                            <label for="alignment">Alignment</label>
+                            <select id="alignment">
+                                <option value="">Select...</option>
+                                <option value="Lawful Good">Lawful Good</option>
+                                <option value="Neutral Good">Neutral Good</option>
+                                <option value="Chaotic Good">Chaotic Good</option>
+                                <option value="Lawful Neutral">Lawful Neutral</option>
+                                <option value="True Neutral">True Neutral</option>
+                                <option value="Chaotic Neutral">Chaotic Neutral</option>
+                                <option value="Lawful Evil">Lawful Evil</option>
+                                <option value="Neutral Evil">Neutral Evil</option>
+                                <option value="Chaotic Evil">Chaotic Evil</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ability Scores -->
+                <div class="section">
+                    <div class="section-title">💪 Ability Scores</div>
+                    <div class="ability-scores">
+                        <div class="ability-box">
+                            <div class="ability-name">Strength</div>
+                            <input type="number" class="ability-input" id="str" min="1" max="30" value="10" required>
+                            <div class="ability-modifier" id="str-mod">+0</div>
+                        </div>
+                        <div class="ability-box">
+                            <div class="ability-name">Dexterity</div>
+                            <input type="number" class="ability-input" id="dex" min="1" max="30" value="10" required>
+                            <div class="ability-modifier" id="dex-mod">+0</div>
+                        </div>
+                        <div class="ability-box">
+                            <div class="ability-name">Constitution</div>
+                            <input type="number" class="ability-input" id="con" min="1" max="30" value="10" required>
+                            <div class="ability-modifier" id="con-mod">+0</div>
+                        </div>
+                        <div class="ability-box">
+                            <div class="ability-name">Intelligence</div>
+                            <input type="number" class="ability-input" id="int" min="1" max="30" value="10" required>
+                            <div class="ability-modifier" id="int-mod">+0</div>
+                        </div>
+                        <div class="ability-box">
+                            <div class="ability-name">Wisdom</div>
+                            <input type="number" class="ability-input" id="wis" min="1" max="30" value="10" required>
+                            <div class="ability-modifier" id="wis-mod">+0</div>
+                        </div>
+                        <div class="ability-box">
+                            <div class="ability-name">Charisma</div>
+                            <input type="number" class="ability-input" id="cha" min="1" max="30" value="10" required>
+                            <div class="ability-modifier" id="cha-mod">+0</div>
+                        </div>
+                </div>
+            </div>
+
+            <!-- Defenses -->
+            <div class="section">
+                <div class="section-title">🛡️ Defenses</div>
+                <div class="form-group">
+                    <label>Damage Resistances</label>
+                    <div class="resistance-grid" id="charResistances"></div>
+                    <div class="form-helper-text">Select all damage types this character resists.</div>
+                </div>
+                <div class="form-group">
+                    <label>Damage Immunities</label>
+                    <div class="resistance-grid" id="charImmunities"></div>
+                    <div class="form-helper-text">Select damage types this character is immune to.</div>
+                </div>
+                <div class="form-group">
+                    <label>Damage Vulnerabilities</label>
+                    <div class="resistance-grid" id="charVulnerabilities"></div>
+                    <div class="form-helper-text">Select damage types this character is vulnerable to.</div>
+                </div>
+            </div>
+
+            <!-- Combat Stats -->
+            <div class="section">
+                    <div class="section-title">⚔️ Combat Statistics</div>
+                    <div class="hp-ac-section">
+                        <div class="stat-box">
+                            <div class="stat-label">Hit Points</div>
+                            <input type="number" class="stat-input" id="hp" min="1" value="10" required>
+                            <div style="font-size: 11px; color: #a5b4fc; margin-top: 8px; text-align: center;">
+                                Hit Die: <span id="hitDie" style="font-weight: 700; color: #818cf8;">d8</span><br>
+                                Suggested: <span id="suggestedHP" style="font-weight: 700; color: #a78bfa;">10</span>
+                                <button type="button" onclick="useSuggestedHP()" style="display: block; margin: 4px auto 0; padding: 4px 8px; font-size: 10px; background: linear-gradient(135deg, #818cf8, #a78bfa); border: none; border-radius: 6px; color: white; cursor: pointer; font-weight: 600;">Use Suggested</button>
+                            </div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Armor Class</div>
+                            <input type="number" class="stat-input" id="ac" min="1" value="10" required>
+                            <div style="font-size: 11px; color: #a5b4fc; margin-top: 8px; text-align: center;">
+                                <span id="acSuggestions">Unarmored: 10</span>
+                                <button type="button" onclick="useUnarmoredAC()" style="display: block; margin: 4px auto 0; padding: 4px 8px; font-size: 10px; background: linear-gradient(135deg, #818cf8, #a78bfa); border: none; border-radius: 6px; color: white; cursor: pointer; font-weight: 600;">Use Unarmored</button>
+                            </div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Speed</div>
+                            <input type="number" class="stat-input" id="speed" min="0" value="30" required>
+                            <div style="font-size: 11px; color: #a5b4fc; margin-top: 8px; text-align: center;">
+                                Base: 30 ft
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calculated Stats -->
+                <div class="section">
+                    <div class="section-title">📊 Calculated Statistics</div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                        <div class="stat-box" style="padding: 16px;">
+                            <div class="stat-label" style="font-size: 11px;">Proficiency Bonus</div>
+                            <div id="profBonus" style="font-size: 32px; font-weight: 800; color: #818cf8; margin-top: 8px;">+2</div>
+                        </div>
+                        <div class="stat-box" style="padding: 16px;">
+                            <div class="stat-label" style="font-size: 11px;">Initiative</div>
+                            <div id="initiative" style="font-size: 32px; font-weight: 800; color: #818cf8; margin-top: 8px;">+0</div>
+                        </div>
+                        <div class="stat-box" style="padding: 16px;">
+                            <div class="stat-label" style="font-size: 11px;">Passive Perception</div>
+                            <div id="passivePerception" style="font-size: 32px; font-weight: 800; color: #818cf8; margin-top: 8px;">10</div>
+                        </div>
+                    </div>
+
+                    <!-- Attack Bonuses -->
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 12px; font-size: 14px; color: #c7d2fe;">⚔️ Attack Bonuses</label>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                            <div style="background: rgba(129, 140, 248, 0.05); padding: 12px; border-radius: 10px; border: 1px solid rgba(129, 140, 248, 0.2);">
+                                <div style="font-size: 12px; color: #a5b4fc; margin-bottom: 4px;">Melee Attack (STR)</div>
+                                <div id="meleeAttack" style="font-size: 24px; font-weight: 700; color: #818cf8;">+0</div>
+                            </div>
+                            <div style="background: rgba(129, 140, 248, 0.05); padding: 12px; border-radius: 10px; border: 1px solid rgba(129, 140, 248, 0.2);">
+                                <div style="font-size: 12px; color: #a5b4fc; margin-bottom: 4px;">Ranged Attack (DEX)</div>
+                                <div id="rangedAttack" style="font-size: 24px; font-weight: 700; color: #818cf8;">+0</div>
+                            </div>
+                            <div style="background: rgba(129, 140, 248, 0.05); padding: 12px; border-radius: 10px; border: 1px solid rgba(129, 140, 248, 0.2);">
+                                <div style="font-size: 12px; color: #a5b4fc; margin-bottom: 4px;">Finesse Attack (DEX/STR)</div>
+                                <div id="finesseAttack" style="font-size: 24px; font-weight: 700; color: #818cf8;">+0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Spell Stats -->
+                    <div>
+                        <label style="display: block; margin-bottom: 12px; font-size: 14px; color: #c7d2fe;">✨ Spell Statistics</label>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                            <div style="background: rgba(167, 139, 250, 0.05); padding: 12px; border-radius: 10px; border: 1px solid rgba(167, 139, 250, 0.2);">
+                                <div style="font-size: 12px; color: #c4b5fd; margin-bottom: 4px;">Spell Save DC</div>
+                                <div id="spellSaveDC" style="font-size: 24px; font-weight: 700; color: #a78bfa;">--</div>
+                            </div>
+                            <div style="background: rgba(167, 139, 250, 0.05); padding: 12px; border-radius: 10px; border: 1px solid rgba(167, 139, 250, 0.2);">
+                                <div style="font-size: 12px; color: #c4b5fd; margin-bottom: 4px;">Spell Attack Bonus</div>
+                                <div id="spellAttackBonus" style="font-size: 24px; font-weight: 700; color: #a78bfa;">--</div>
+                            </div>
+                            <div style="background: rgba(167, 139, 250, 0.05); padding: 12px; border-radius: 10px; border: 1px solid rgba(167, 139, 250, 0.2);">
+                                <div style="font-size: 12px; color: #c4b5fd; margin-bottom: 4px;">Spellcasting Ability</div>
+                                <div id="spellcastingAbility" style="font-size: 18px; font-weight: 600; color: #a78bfa; margin-top: 4px;">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Saving Throws -->
+                <div class="section">
+                    <div class="section-title">🛡️ Saving Throw Proficiencies</div>
+                    <div class="help-text">Select which saving throws your character is proficient in (usually 2 from your class)</div>
+                    <div class="checkbox-grid">
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="savingThrow" value="strength">
+                            <span><span class="proficiency-dot">●</span> Strength <span id="save-str-bonus" style="color: #818cf8; font-weight: 700;">+0</span></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="savingThrow" value="dexterity">
+                            <span><span class="proficiency-dot">●</span> Dexterity <span id="save-dex-bonus" style="color: #818cf8; font-weight: 700;">+0</span></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="savingThrow" value="constitution">
+                            <span><span class="proficiency-dot">●</span> Constitution <span id="save-con-bonus" style="color: #818cf8; font-weight: 700;">+0</span></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="savingThrow" value="intelligence">
+                            <span><span class="proficiency-dot">●</span> Intelligence <span id="save-int-bonus" style="color: #818cf8; font-weight: 700;">+0</span></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="savingThrow" value="wisdom">
+                            <span><span class="proficiency-dot">●</span> Wisdom <span id="save-wis-bonus" style="color: #818cf8; font-weight: 700;">+0</span></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="savingThrow" value="charisma">
+                            <span><span class="proficiency-dot">●</span> Charisma <span id="save-cha-bonus" style="color: #818cf8; font-weight: 700;">+0</span></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Skills -->
+                <div class="section">
+                    <div class="section-title">🎯 Skill Proficiencies</div>
+                    <div class="help-text">Select which skills your character is proficient in (usually 2-4 from your class and background)</div>
+                    <div class="checkbox-grid skills-grid">
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="acrobatics">
+                            <span><span class="proficiency-dot">●</span> Acrobatics <em>(DEX)</em> <span id="skill-acrobatics-bonus" style="color: #818cf8; font-weight: 700;">+0</span></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="animalhandling">
+                            <span><span class="proficiency-dot">●</span> Animal Handling <em>(WIS)</em> <span id="skill-animalhandling-bonus" style="color: #818cf8; font-weight: 700;">+0</span></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="arcana">
+                            <span><span class="proficiency-dot">●</span> Arcana <em>(INT)</em> <span id="skill-arcana-bonus" style="color: #818cf8; font-weight: 700;">+0</span></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="athletics">
+                            <span><span class="proficiency-dot">●</span> Athletics <em>(STR)</em> <span id="skill-athletics-bonus" style="color: #818cf8; font-weight: 700;">+0</span></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="deception">
+                            <span><span class="proficiency-dot">●</span> Deception <em>(CHA)</em> <span id="skill-deception-bonus" style="color: #818cf8; font-weight: 700;">+0</span></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="history">
+                            <span><span class="proficiency-dot">●</span> History <em>(INT)</em> <span id="skill-history-bonus" style="color: #818cf8; font-weight: 700;">+0</span></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="insight">
+                            <span><span class="proficiency-dot">●</span> Insight <em>(WIS)</em> <span id="skill-insight-bonus" style="color: #818cf8; font-weight: 700;">+0</span></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="intimidation">
+                            <span><span class="proficiency-dot">●</span> Intimidation <em>(CHA)</em> <span id="skill-intimidation-bonus" style="color: #818cf8; font-weight: 700;">+0</span></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="investigation">
+                            <span><span class="proficiency-dot">●</span> Investigation <em>(INT)</em> <span id="skill-investigation-bonus" style="color: #818cf8; font-weight: 700;">+0</span></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="medicine">
+                            <span><span class="proficiency-dot">●</span> Medicine <em>(WIS)</em> <span id="skill-medicine-bonus" style="color: #818cf8; font-weight: 700;">+0</span></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="nature">
+                            <span><span class="proficiency-dot">●</span> Nature <em>(INT)</em> <span id="skill-nature-bonus" style="color: #818cf8; font-weight: 700;">+0</span></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="perception">
+                            <span><span class="proficiency-dot">●</span> Perception <em>(WIS)</em> <span id="skill-perception-bonus" style="color: #818cf8; font-weight: 700;">+0</span></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="performance">
+                            <span><span class="proficiency-dot">●</span> Performance <em>(CHA)</em> <span id="skill-performance-bonus" style="color: #818cf8; font-weight: 700;">+0</span></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="persuasion">
+                            <span><span class="proficiency-dot">●</span> Persuasion <em>(CHA)</em> <span id="skill-persuasion-bonus" style="color: #818cf8; font-weight: 700;">+0</span></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="religion">
+                            <span><span class="proficiency-dot">●</span> Religion <em>(INT)</em> <span id="skill-religion-bonus" style="color: #818cf8; font-weight: 700;">+0</span></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="sleightofhand">
+                            <span><span class="proficiency-dot">●</span> Sleight of Hand <em>(DEX)</em> <span id="skill-sleightofhand-bonus" style="color: #818cf8; font-weight: 700;">+0</span></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="stealth">
+                            <span><span class="proficiency-dot">●</span> Stealth <em>(DEX)</em> <span id="skill-stealth-bonus" style="color: #818cf8; font-weight: 700;">+0</span></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="survival">
+                            <span><span class="proficiency-dot">●</span> Survival <em>(WIS)</em> <span id="skill-survival-bonus" style="color: #818cf8; font-weight: 700;">+0</span></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Character Details -->
+                <div class="section">
+                    <div class="section-title">✨ Character Details</div>
+                    <div class="detail-tabs">
+                        <div class="tab-buttons">
+                            <button type="button" class="tab-btn active" data-tab="inventoryTab" onclick="switchDetailTab('inventoryTab')">Inventory</button>
+                            <button type="button" class="tab-btn" data-tab="proficienciesTab" onclick="switchDetailTab('proficienciesTab')">Proficiencies & Languages</button>
+                        </div>
+                        <div id="inventoryTab" class="detail-tab active">
+                            <div class="form-group">
+                                <label>Equipment & Inventory</label>
+                                <div id="inventoryEditor" class="inventory-editor">
+                                    <div class="inventory-empty">No items added yet</div>
+                                </div>
+                                <button type="button" class="chip-add-btn" id="addInventoryItemBtn" onclick="addInventoryItem()">+ Add Item</button>
+                                <p class="helper-text">Adjust the rows above to keep the character's gear in sync with the in-game inventory.</p>
+                            </div>
+                        </div>
+                        <div id="proficienciesTab" class="detail-tab">
+                            <div class="form-group">
+                                <label for="proficiencies">Proficiencies & Languages</label>
+                                <textarea id="proficiencies" placeholder="List your proficiencies, tool proficiencies, and languages..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section" id="spellsSection" style="display:none;">
+                    <div class="section-title">✨ Spells & Spellbook</div>
+                    <div id="spellSummary" class="spell-summary"></div>
+                    <div class="spell-columns">
+                        <div class="spell-column" id="cantripColumn" style="display:none;">
+                            <div class="spell-column-header">
+                                <span>Cantrips</span>
+                                <button type="button" class="chip-add-btn spell-add-btn" onclick="openSpellModal('cantrips')">Add</button>
+                            </div>
+                            <div class="chip-group" id="cantripChipList"></div>
+                        </div>
+                        <div class="spell-column" id="knownColumn" style="display:none;">
+                            <div class="spell-column-header">
+                                <span>Known Spells</span>
+                                <button type="button" class="chip-add-btn spell-add-btn" onclick="openSpellModal('known')">Add</button>
+                            </div>
+                            <div class="chip-group" id="knownChipList"></div>
+                        </div>
+                        <div class="spell-column" id="spellbookColumn" style="display:none;">
+                            <div class="spell-column-header">
+                                <span>Spellbook</span>
+                                <button type="button" class="chip-add-btn spell-add-btn" onclick="openSpellModal('spellbook')">Add</button>
+                            </div>
+                            <div class="chip-group" id="spellbookChipList"></div>
+                        </div>
+                        <div class="spell-column" id="preparedColumn" style="display:none;">
+                            <div class="spell-column-header">
+                                <span>Prepared Spells</span>
+                                <button type="button" class="chip-add-btn spell-add-btn" onclick="openSpellModal('prepared')">Add</button>
+                            </div>
+                            <div class="chip-group" id="preparedChipList"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Personality & Backstory -->
+                <div class="section">
+                    <div class="section-title">📖 Personality & Background</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="personality">Personality Traits</label>
+                            <textarea id="personality" placeholder="Describe your character's personality..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="ideals">Ideals</label>
+                            <textarea id="ideals" placeholder="What does your character believe in?"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="bonds">Bonds</label>
+                            <textarea id="bonds" placeholder="Who or what is your character connected to?"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="flaws">Flaws</label>
+                            <textarea id="flaws" placeholder="What are your character's weaknesses?"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 15px;">
+                        <label for="backstory">Backstory</label>
+                        <textarea id="backstory" placeholder="Tell your character's story..." style="min-height: 150px;"></textarea>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn">💾 Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="spellModal" style="display:none;">
+        <div class="inventory-modal">
+            <div class="spell-modal-header">
+                <h3 id="spellModalTitle">Select Spell</h3>
+                <button type="button" class="close-modal-btn" onclick="closeSpellModal()">✕</button>
+            </div>
+            <input type="text" id="spellSearchInput" class="spell-search" placeholder="Search spells..." oninput="filterSpellModal()">
+            <div id="spellModalList" class="spell-modal-list"></div>
+        </div>
+    </div>
+
+    <script src="spell-data.js"></script>
+    <script src="equipment-catalog.js"></script>
+    <script src="damage-types.js"></script>
+    <script>
+        let characterId = null;
+        let campaignId = null;
+        let editModeEnabled = false;
+        let currentInventory = [];
+        let currentSpells = {
+            cantrips: [],
+            known: [],
+            prepared: [],
+            spellbook: [],
+            slots: {},
+            ability: null,
+            mode: null
+        };
+        let activeSpellListKey = null;
+        let spellModalCache = [];
+        const EQUIPMENT_GROUPS = window.getEquipmentCatalogGroups ? window.getEquipmentCatalogGroups() : {};
+        const BASE_CATALOG_GROUP_ORDER = ['weapon', 'armor', 'shield', 'potion', 'consumable', 'tool', 'gear', 'pack', 'focus', 'ammo', 'mount', 'vehicle'];
+        const CATALOG_GROUP_ORDER = [...BASE_CATALOG_GROUP_ORDER, ...Object.keys(EQUIPMENT_GROUPS)
+            .filter(group => !BASE_CATALOG_GROUP_ORDER.includes(group))
+            .sort()];
+        const CUSTOM_OPTION_VALUE = '__custom__';
+
+        function generateInventoryId() {
+            return `inv_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
+        }
+
+        function createCustomInventoryItem() {
+            return {
+                id: generateInventoryId(),
+                mode: 'custom',
+                catalogId: null,
+                name: '',
+                category: 'gear',
+                type: 'gear',
+                quantity: 1,
+                description: '',
+                equipped: false
+            };
+        }
+
+        function createInventoryEntryFromCatalog(catalogId, existing = {}) {
+            const definition = window.getEquipmentCatalogItem ? window.getEquipmentCatalogItem(catalogId) : null;
+            if (!definition) {
+                const custom = createCustomInventoryItem();
+                custom.quantity = existing.quantity || 1;
+                custom.description = existing.description || '';
+                custom.name = existing.name || '';
+                custom.type = existing.type || 'gear';
+                custom.equipped = existing.equipped || false;
+                return custom;
+            }
+
+            return {
+                id: existing.id || generateInventoryId(),
+                mode: 'catalog',
+                catalogId,
+                name: definition.name,
+                category: definition.category || 'gear',
+                subcategory: definition.subcategory || '',
+                type: definition.category === 'weapon' ? 'weapon'
+                    : (definition.category === 'armor' || definition.category === 'shield') ? 'armor'
+                    : definition.category === 'potion' ? 'potion'
+                    : definition.category === 'consumable' ? 'consumable'
+                    : definition.category === 'tool' ? 'tool'
+                    : definition.category === 'ammo' ? 'ammo'
+                    : 'gear',
+                quantity: existing.quantity || 1,
+                weight: definition.weight || 0,
+                cost: definition.cost || '',
+                damage: definition.damage || null,
+                properties: definition.properties || [],
+                ammo: definition.ammo || null,
+                acBase: definition.acBase || null,
+                acBonus: definition.acBonus || null,
+                stealthDisadvantage: !!definition.stealthDisadvantage,
+                strengthRequirement: definition.strengthRequirement || null,
+                effect: definition.effect || null,
+                description: definition.description || existing.description || '',
+                equipped: existing.equipped || false
+            };
+        }
+
+        function normalizeInventoryItem(item) {
+            if (!item) return null;
+            if (!item.id) item.id = generateInventoryId();
+            if (item.catalogId && window.getEquipmentCatalogItem) {
+                const definition = window.getEquipmentCatalogItem(item.catalogId);
+                if (definition) {
+                    item.mode = 'catalog';
+                    item.name = definition.name;
+                    item.category = definition.category;
+                    item.subcategory = definition.subcategory || '';
+                    item.type = definition.category === 'weapon' ? 'weapon'
+                        : (definition.category === 'armor' || definition.category === 'shield') ? 'armor'
+                        : definition.category === 'potion' ? 'potion'
+                        : definition.category === 'consumable' ? 'consumable'
+                        : definition.category === 'tool' ? 'tool'
+                        : definition.category === 'ammo' ? 'ammo'
+                        : 'gear';
+                    item.damage = definition.damage || item.damage || null;
+                    item.properties = definition.properties || item.properties || [];
+                    item.acBase = definition.acBase || item.acBase || null;
+                    item.acBonus = definition.acBonus || item.acBonus || null;
+                    item.effect = definition.effect || item.effect || null;
+                    item.weight = definition.weight || item.weight || 0;
+                    item.cost = definition.cost || item.cost || '';
+                    item.description = item.description || definition.description || '';
+                }
+            } else {
+                item.mode = item.mode || 'custom';
+                item.category = item.category || item.type || 'gear';
+            }
+            if (typeof item.quantity !== 'number') {
+                item.quantity = parseInt(item.quantity || 1) || 1;
+            }
+            if (typeof item.equipped !== 'boolean') {
+                item.equipped = !!item.equipped;
+            }
+            return item;
+        }
+
+        function buildCatalogOptions(selectedId) {
+            let html = `<option value="${CUSTOM_OPTION_VALUE}" ${!selectedId ? 'selected' : ''}>Custom Item</option>`;
+            CATALOG_GROUP_ORDER.forEach(group => {
+                const items = EQUIPMENT_GROUPS[group];
+                if (!items || !items.length) return;
+                const label = group.charAt(0).toUpperCase() + group.slice(1);
+                html += `<optgroup label="${label}">`;
+                items
+                    .slice()
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .forEach(item => {
+                        const summary = item.damage ? ` (${item.damage.dice} ${item.damage.type || ''})` :
+                            item.effect?.dice ? ` (${item.effect.dice})` : '';
+                        html += `<option value="${item.id}" ${item.id === selectedId ? 'selected' : ''}>${item.name}${summary}</option>`;
+                    });
+                html += `</optgroup>`;
+            });
+            return html;
+        }
+
+        function formatInventoryDetails(item) {
+            const lines = [];
+            if (item.damage?.dice) {
+                const dmgType = item.damage.type ? ` ${item.damage.type}` : '';
+                lines.push(`Damage: <strong>${item.damage.dice}</strong>${dmgType}`);
+            }
+            if (item.properties && item.properties.length) {
+                lines.push(`Properties: ${escapeHtml(item.properties.join(', '))}`);
+            }
+            if (item.acBase || item.acBonus) {
+                const bits = [];
+                if (item.acBase) bits.push(`Base AC ${item.acBase}`);
+                if (item.acBonus) bits.push(`Bonus +${item.acBonus}`);
+                if (item.strengthRequirement) bits.push(`STR ${item.strengthRequirement}+`);
+                if (item.stealthDisadvantage) bits.push('Stealth Disadvantage');
+                lines.push(bits.join(' • '));
+            }
+            if (item.effect?.description) {
+                const effectLabel = item.effect.type === 'healing' ? 'Healing' :
+                    item.effect.type === 'damage' ? `Damage (${item.effect.damageType || 'varies'})` :
+                    'Effect';
+                const diceText = item.effect.dice ? ` ${item.effect.dice}` : '';
+                lines.push(`${effectLabel}:${diceText} - ${escapeHtml(item.effect.description)}`);
+            }
+            if (item.cost || item.weight) {
+                lines.push(`Cost: ${item.cost || '—'} • Weight: ${item.weight || 0} lb.`);
+            }
+            if (item.description && !item.effect) {
+                lines.push(escapeHtml(item.description));
+            }
+            return lines.join('<br>');
+        }
+
+        // Get campaign ID or character ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        campaignId = urlParams.get('campaignId');
+        const charIdParam = urlParams.get('characterId');
+
+        if (!campaignId && !charIdParam) {
+            alert('No campaign or character specified');
+            window.location.href = '/dashboard.html';
+        }
+
+        // Get user info
+        const userStr = localStorage.getItem('user');
+        if (!userStr) {
+            window.location.href = '/login.html';
+        }
+        const user = JSON.parse(userStr);
+
+        const DAMAGE_TYPE_OPTIONS = Array.isArray(window.DAMAGE_TYPES) && window.DAMAGE_TYPES.length
+            ? window.DAMAGE_TYPES
+            : [
+                { id: 'acid', label: 'Acid' },
+                { id: 'bludgeoning', label: 'Bludgeoning' },
+                { id: 'cold', label: 'Cold' },
+                { id: 'fire', label: 'Fire' },
+                { id: 'force', label: 'Force' },
+                { id: 'lightning', label: 'Lightning' },
+                { id: 'necrotic', label: 'Necrotic' },
+                { id: 'piercing', label: 'Piercing' },
+                { id: 'poison', label: 'Poison' },
+                { id: 'psychic', label: 'Psychic' },
+                { id: 'radiant', label: 'Radiant' },
+                { id: 'slashing', label: 'Slashing' },
+                { id: 'thunder', label: 'Thunder' }
+            ];
+
+        function renderDamageTypeOptions(containerId, selected = []) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            const normalized = (selected || []).map(value => String(value).toLowerCase());
+            container.innerHTML = DAMAGE_TYPE_OPTIONS.map(option => {
+                const checked = normalized.includes(option.id) ? 'checked' : '';
+                return `
+                    <label class="resistance-chip">
+                        <input type="checkbox" value="${option.id}" ${checked}>
+                        ${option.label}
+                    </label>
+                `;
+            }).join('');
+        }
+
+        function getSelectedDamageTypes(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return [];
+            return Array.from(container.querySelectorAll('input[type="checkbox"]:checked'))
+                .map(input => String(input.value).toLowerCase());
+        }
+
+        function setEditMode(enabled) {
+            editModeEnabled = enabled;
+            const formElements = document.querySelectorAll('#characterForm input, #characterForm select, #characterForm textarea');
+            formElements.forEach(el => {
+                if (el.id === 'editToggle') return;
+                if (el.id === 'profileImage' || el.type === 'file') {
+                    el.disabled = !enabled;
+                    return;
+                }
+                el.disabled = !enabled;
+            });
+
+            const checkboxes = document.querySelectorAll('#characterForm input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.disabled = !enabled);
+
+            const saveButton = document.querySelector('.submit-btn');
+            if (saveButton) {
+                saveButton.disabled = !enabled;
+                saveButton.style.opacity = enabled ? '1' : '0.5';
+                saveButton.style.pointerEvents = enabled ? 'auto' : 'none';
+            }
+
+            const toggle = document.getElementById('editToggle');
+            if (toggle) {
+                toggle.checked = enabled;
+            }
+
+            refreshInventoryInputs();
+            refreshSpellControls();
+        }
+
+        function setRaceValue(value) {
+            const raceSelect = document.getElementById('race');
+            if (!raceSelect) return;
+            if (!value) {
+                raceSelect.value = '';
+                return;
+            }
+            const options = Array.from(raceSelect.options).map(opt => opt.value);
+            if (options.includes(value)) {
+                raceSelect.value = value;
+                return;
+            }
+            const simplified = value.split('(')[0].trim();
+            const matched = options.find(opt => value.toLowerCase().includes(opt.toLowerCase())) ||
+                            options.find(opt => opt.toLowerCase() === simplified.toLowerCase());
+            if (matched) {
+                raceSelect.value = matched;
+                return;
+            }
+            const customOption = document.createElement('option');
+            customOption.value = value;
+            customOption.textContent = value;
+            raceSelect.appendChild(customOption);
+            raceSelect.value = value;
+        }
+
+        function switchDetailTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                const isActive = btn.getAttribute('data-tab') === tabId;
+                btn.classList.toggle('active', isActive);
+            });
+            document.querySelectorAll('.detail-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.id === tabId);
+            });
+        }
+
+        function escapeHtml(value) {
+            if (value === undefined || value === null) return '';
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function cloneInventoryItem(item = {}) {
+            return {
+                name: item.name || '',
+                type: item.type || 'item',
+                quantity: typeof item.quantity === 'number' ? item.quantity : (parseInt(item.quantity) || 1),
+                description: item.description || item.details || ''
+            };
+        }
+
+        function setInventoryFromCharacter(char) {
+            if (Array.isArray(char?.inventory) && char.inventory.length) {
+                currentInventory = char.inventory.map(item => normalizeInventoryItem({ ...item })).filter(Boolean);
+            } else if (Array.isArray(char?.equipment) && char.equipment.length) {
+                currentInventory = char.equipment.map(item => normalizeInventoryItem({ ...item })).filter(Boolean);
+            } else if (typeof char?.equipment === 'string' && char.equipment.trim()) {
+                currentInventory = char.equipment.split(/[\n,]/).map(line => {
+                    const name = line.trim();
+                    if (!name) return null;
+                    return normalizeInventoryItem({ name, type: 'gear', quantity: 1, description: '' });
+                }).filter(Boolean);
+            } else {
+                currentInventory = [];
+            }
+            renderInventoryEditor();
+        }
+
+        function renderInventoryEditor() {
+            const container = document.getElementById('inventoryEditor');
+            if (!container) return;
+            if (!currentInventory.length) {
+                container.innerHTML = `<div class="inventory-empty">No items added yet</div>`;
+                refreshInventoryInputs();
+                return;
+            }
+
+            container.innerHTML = currentInventory.map((item, index) => {
+                const selectValue = item.catalogId || (item.mode === 'custom' ? CUSTOM_OPTION_VALUE : '');
+                const selectHtml = buildCatalogOptions(selectValue);
+                const isCustom = item.mode === 'custom' || !item.catalogId;
+                const details = !isCustom ? formatInventoryDetails(item) : '';
+                const customFields = isCustom ? `
+                    <div class="inventory-custom-fields">
+                        <input type="text" value="${escapeHtml(item.name || '')}" placeholder="Name" oninput="updateInventoryItem(${index}, 'name', this.value)">
+                        <input type="text" value="${escapeHtml(item.type || 'gear')}" placeholder="Type" oninput="updateInventoryItem(${index}, 'type', this.value)">
+                    </div>
+                    <textarea class="inventory-description" placeholder="Description" oninput="updateInventoryItem(${index}, 'description', this.value)">${escapeHtml(item.description || '')}</textarea>
+                ` : '';
+                return `
+                    <div class="inventory-entry">
+                        <div class="inventory-row">
+                            <select class="inventory-select" onchange="selectInventoryCatalog(${index}, this.value)">
+                                ${selectHtml}
+                            </select>
+                            <div class="inventory-qty-control">
+                                <label>Qty</label>
+                                <input type="number" min="0" value="${item.quantity ?? 1}" onchange="updateInventoryItem(${index}, 'quantity', this.value)">
+                            </div>
+                            <label class="inventory-equipped">
+                                <input type="checkbox" ${item.equipped ? 'checked' : ''} onchange="toggleInventoryEquipped(${index}, this.checked)">
+                                Equipped
+                            </label>
+                            <button type="button" class="inventory-remove" onclick="removeInventoryItem(${index})" title="Remove item">✕</button>
+                        </div>
+                        ${customFields}
+                        ${details ? `<div class="inventory-details">${details}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+            refreshInventoryInputs();
+        }
+
+        function addInventoryItem() {
+            if (!editModeEnabled) return;
+            currentInventory.push(createCustomInventoryItem());
+            renderInventoryEditor();
+        }
+
+        function selectInventoryCatalog(index, catalogId) {
+            if (!currentInventory[index]) return;
+            if (catalogId === CUSTOM_OPTION_VALUE || !catalogId) {
+                const template = createCustomInventoryItem();
+                template.quantity = currentInventory[index].quantity || 1;
+                template.description = currentInventory[index].description || '';
+                currentInventory[index] = template;
+            } else {
+                currentInventory[index] = createInventoryEntryFromCatalog(catalogId, currentInventory[index]);
+            }
+            renderInventoryEditor();
+        }
+
+        function updateInventoryItem(index, field, value) {
+            if (!currentInventory[index]) return;
+            if (field === 'quantity') {
+                const qty = parseInt(value);
+                currentInventory[index][field] = isNaN(qty) ? 0 : qty;
+                return;
+            }
+            currentInventory[index][field] = value;
+        }
+
+        function toggleInventoryEquipped(index, value) {
+            if (!currentInventory[index]) return;
+            currentInventory[index].equipped = value;
+        }
+
+        function removeInventoryItem(index) {
+            if (!editModeEnabled) return;
+            currentInventory.splice(index, 1);
+            renderInventoryEditor();
+        }
+
+        function refreshInventoryInputs() {
+            const disabled = !editModeEnabled;
+            document.querySelectorAll('#inventoryEditor input, #inventoryEditor select, #inventoryEditor textarea').forEach(input => input.disabled = disabled);
+            document.querySelectorAll('#inventoryEditor button').forEach(btn => btn.disabled = disabled);
+            const addBtn = document.getElementById('addInventoryItemBtn');
+            if (addBtn) {
+                addBtn.disabled = disabled;
+                addBtn.style.opacity = disabled ? '0.5' : '1';
+            }
+        }
+
+        function getClassId() {
+            const className = document.getElementById('class').value;
+            return className ? className.toLowerCase() : null;
+        }
+
+        function getSpellDefinitionById(spellId) {
+            if (typeof SPELL_LIST === 'undefined') return null;
+            return SPELL_LIST.find(spell => spell.id === spellId) || null;
+        }
+
+        function setSpellsFromCharacter(char) {
+            const classId = getClassId();
+            const config = classId && typeof SPELLCASTING_CONFIG !== 'undefined'
+                ? SPELLCASTING_CONFIG[classId]
+                : null;
+            const spells = char?.spells || {};
+            currentSpells = {
+                cantrips: Array.isArray(spells.cantrips) ? [...spells.cantrips] : [],
+                known: Array.isArray(spells.known) ? [...spells.known] : [],
+                prepared: Array.isArray(spells.prepared) ? [...spells.prepared] : [],
+                spellbook: Array.isArray(spells.spellbook) ? [...spells.spellbook] : [],
+                slots: spells.slots || (config?.slots || {}),
+                ability: spells.ability || config?.ability || null,
+                mode: spells.mode || config?.mode || null
+            };
+            renderSpellEditor();
+        }
+
+        function renderSpellEditor(initializing = false) {
+            const section = document.getElementById('spellsSection');
+            if (!section) return;
+            const classId = getClassId();
+            const config = classId && typeof SPELLCASTING_CONFIG !== 'undefined'
+                ? SPELLCASTING_CONFIG[classId]
+                : null;
+            const level = parseInt(document.getElementById('level').value) || 1;
+            const enabledLevel = config?.enabledLevel || 1;
+            const hasData = currentSpells.cantrips.length || currentSpells.known.length ||
+                currentSpells.prepared.length || currentSpells.spellbook.length;
+            if ((!config || level < enabledLevel) && !hasData) {
+                section.style.display = 'none';
+                return;
+            }
+            section.style.display = 'block';
+            const ability = currentSpells.ability || config?.ability || null;
+            const slots = Object.keys(currentSpells.slots || {}).length
+                ? currentSpells.slots
+                : (config?.slots || {});
+            const summary = document.getElementById('spellSummary');
+            if (summary) {
+                const slotText = Object.entries(slots).length
+                    ? Object.entries(slots).map(([lvl, count]) => `Level ${lvl}: ${count}`).join(' • ')
+                    : 'No spell slots recorded';
+                const abilityLabel = ability ? ability.toUpperCase() : '—';
+                const modeLabel = (currentSpells.mode || config?.mode || 'Not specified').toUpperCase();
+                summary.innerHTML = `
+                    <div style="display:flex; flex-direction:column; gap:6px; color:#cbd5e1;">
+                        <div><strong>Spellcasting Ability:</strong> ${escapeHtml(abilityLabel)}</div>
+                        <div><strong>Mode:</strong> ${escapeHtml(modeLabel)}</div>
+                        <div><strong>Slots:</strong> ${escapeHtml(slotText)}</div>
+                    </div>
+                `;
+            }
+            toggleSpellColumn('cantripColumn', currentSpells.cantrips, 'cantrips', true);
+            toggleSpellColumn('knownColumn', currentSpells.known, 'known', config?.mode === 'known');
+            toggleSpellColumn('spellbookColumn', currentSpells.spellbook, 'spellbook', config?.mode === 'prepared');
+            toggleSpellColumn('preparedColumn', currentSpells.prepared, 'prepared', config?.mode === 'prepared');
+            refreshSpellControls();
+        }
+
+        function toggleSpellColumn(columnId, values, key, forceVisible) {
+            const column = document.getElementById(columnId);
+            if (!column) return;
+            const shouldDisplay = forceVisible || (Array.isArray(values) && values.length > 0);
+            column.style.display = shouldDisplay ? 'flex' : 'none';
+            const chips = column.querySelector('.chip-group');
+            if (!chips) return;
+            if (!shouldDisplay || !values || !values.length) {
+                chips.innerHTML = `<div class="inventory-empty">No spells selected</div>`;
+                return;
+            }
+            chips.innerHTML = values.map(id => {
+                const spell = getSpellDefinitionById(id);
+                const label = escapeHtml(spell ? spell.name : id);
+                const meta = escapeHtml(spell ? `${spell.school} • ${spell.level === 0 ? 'Cantrip' : 'Level ' + spell.level}` : '');
+                const safeId = id.replace(/'/g, "\\'");
+                return `
+                    <div class="spell-chip">
+                        <div>
+                            <div>${label}</div>
+                            <small style="color:#94a3b8;">${meta}</small>
+                        </div>
+                        <button type="button" class="chip-remove" onclick="removeSpell('${key}', '${safeId}')">✕</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openSpellModal(listKey) {
+            if (!editModeEnabled) return;
+            activeSpellListKey = listKey;
+            const modal = document.getElementById('spellModal');
+            const search = document.getElementById('spellSearchInput');
+            const title = document.getElementById('spellModalTitle');
+            if (title) {
+                const labels = {
+                    cantrips: 'Cantrip',
+                    known: 'Known Spell',
+                    spellbook: 'Spellbook Entry',
+                    prepared: 'Prepared Spell'
+                };
+                title.textContent = `Add ${labels[listKey] || 'Spell'}`;
+            }
+            if (search) search.value = '';
+            renderSpellModalOptions('');
+            if (modal) {
+                modal.classList.add('show');
+                modal.style.display = 'flex';
+            }
+        }
+
+        function closeSpellModal() {
+            const modal = document.getElementById('spellModal');
+            if (modal) {
+                modal.classList.remove('show');
+                modal.style.display = 'none';
+            }
+            activeSpellListKey = null;
+        }
+
+        function renderSpellModalOptions(filter = '') {
+            const listEl = document.getElementById('spellModalList');
+            if (!listEl) return;
+            const classId = getClassId();
+            if (typeof SPELL_LIST === 'undefined') {
+                listEl.innerHTML = '<div class="inventory-empty">Spell data not loaded.</div>';
+                return;
+            }
+            const normalizedFilter = filter.toLowerCase();
+            spellModalCache = SPELL_LIST.filter(spell => {
+                if (classId && !spell.classes.map(c => c.toLowerCase()).includes(classId)) return false;
+                if (activeSpellListKey === 'cantrips') {
+                    if (spell.level !== 0) return false;
+                } else if (spell.level === 0) {
+                    return false;
+                }
+                if (normalizedFilter && !spell.name.toLowerCase().includes(normalizedFilter)) {
+                    return false;
+                }
+                return true;
+            });
+            if (!spellModalCache.length) {
+                listEl.innerHTML = '<div class="inventory-empty">No spells available.</div>';
+                return;
+            }
+            listEl.innerHTML = spellModalCache.map(spell => `
+                <div class="spell-option" onclick="addSpellFromModal('${spell.id}')">
+                    <h4>${escapeHtml(spell.name)}</h4>
+                    <span>${escapeHtml(spell.school)} • ${spell.level === 0 ? 'Cantrip' : 'Level ' + spell.level}</span>
+                    <span>${escapeHtml(spell.shortDescription || '')}</span>
+                </div>
+            `).join('');
+        }
+
+        function filterSpellModal() {
+            const search = document.getElementById('spellSearchInput');
+            const value = search ? search.value : '';
+            renderSpellModalOptions(value);
+        }
+
+        function addSpellFromModal(spellId) {
+            if (!activeSpellListKey || !editModeEnabled) return;
+            if (!Array.isArray(currentSpells[activeSpellListKey])) {
+                currentSpells[activeSpellListKey] = [];
+            }
+            if (!currentSpells[activeSpellListKey].includes(spellId)) {
+                currentSpells[activeSpellListKey].push(spellId);
+                renderSpellEditor();
+            }
+        }
+
+        function removeSpell(listKey, spellId) {
+            if (!editModeEnabled || !Array.isArray(currentSpells[listKey])) return;
+            currentSpells[listKey] = currentSpells[listKey].filter(id => id !== spellId);
+            renderSpellEditor();
+        }
+
+        function refreshSpellControls() {
+            const disabled = !editModeEnabled;
+            document.querySelectorAll('.spell-add-btn').forEach(btn => {
+                btn.disabled = disabled;
+                btn.style.opacity = disabled ? '0.5' : '1';
+            });
+            document.querySelectorAll('#spellsSection .chip-remove').forEach(btn => {
+                btn.disabled = disabled;
+                btn.style.opacity = disabled ? '0.5' : '1';
+                btn.style.pointerEvents = disabled ? 'none' : 'auto';
+            });
+        }
+
+        // Load existing character data
+        async function loadCharacterData() {
+            try {
+                let response, data;
+
+                // If we have a characterId, load by ID (for unassigned characters)
+                if (charIdParam) {
+                    response = await fetch(`/player/${charIdParam}`);
+                    data = await response.json();
+                } else {
+                    // Otherwise load by campaign and user (for assigned characters)
+                    response = await fetch(`/player/campaign/${campaignId}/user/${user.id}`);
+                    data = await response.json();
+                }
+
+                if (data.success && data.player) {
+                    const char = data.player;
+                    characterId = char.id;
+
+                    // Populate all form fields
+                    document.getElementById('charName').value = char.name || '';
+                    setRaceValue(char.race || '');
+                    document.getElementById('class').value = char.class || '';
+                    document.getElementById('level').value = char.level || 1;
+                    document.getElementById('background').value = char.background || '';
+                    document.getElementById('alignment').value = char.alignment || '';
+
+                    // Ability scores
+                    if (char.abilities) {
+                        document.getElementById('str').value = char.abilities.strength || 10;
+                        document.getElementById('dex').value = char.abilities.dexterity || 10;
+                        document.getElementById('con').value = char.abilities.constitution || 10;
+                        document.getElementById('int').value = char.abilities.intelligence || 10;
+                        document.getElementById('wis').value = char.abilities.wisdom || 10;
+                        document.getElementById('cha').value = char.abilities.charisma || 10;
+
+                        // Update modifiers
+                        ['str', 'dex', 'con', 'int', 'wis', 'cha'].forEach(ability => updateModifier(ability));
+                    }
+                    renderDamageTypeOptions('charResistances', char.resistances || []);
+                    renderDamageTypeOptions('charImmunities', char.immunities || []);
+                    renderDamageTypeOptions('charVulnerabilities', char.vulnerabilities || []);
+
+                    // Combat stats - check both hp and maxHp for backwards compatibility
+                    document.getElementById('hp').value = char.maxHp || char.hp || 10;
+                    document.getElementById('ac').value = char.ac || 10;
+                    document.getElementById('speed').value = char.speed || 30;
+
+                    // Details
+                    document.getElementById('proficiencies').value = char.proficiencies || '';
+                    setInventoryFromCharacter(char);
+                    setSpellsFromCharacter(char);
+
+                    // Personality
+                    document.getElementById('personality').value = char.personality || '';
+                    document.getElementById('ideals').value = char.ideals || '';
+                    document.getElementById('bonds').value = char.bonds || '';
+                    document.getElementById('flaws').value = char.flaws || '';
+                    document.getElementById('backstory').value = char.backstory || '';
+
+                    // Load profile image if exists
+                    if (char.profileImage) {
+                        profileImageData = char.profileImage;
+                        const preview = document.getElementById('profilePreview');
+                        preview.innerHTML = `<img src="${char.profileImage}" alt="Profile Preview">`;
+                    }
+
+                    // Populate saving throw proficiencies
+                    if (char.savingThrows && Array.isArray(char.savingThrows)) {
+                        char.savingThrows.forEach(st => {
+                            const checkbox = document.querySelector(`input[name="savingThrow"][value="${st}"]`);
+                            if (checkbox) checkbox.checked = true;
+                        });
+                    }
+
+                    // Populate skill proficiencies
+                    if (char.skills && Array.isArray(char.skills)) {
+                        char.skills.forEach(skill => {
+                            const checkbox = document.querySelector(`input[name="skill"][value="${skill}"]`);
+                            if (checkbox) checkbox.checked = true;
+                        });
+                    }
+
+                    // Update all calculated stats after loading data
+                    setTimeout(() => updateAllCalculatedStats(), 100);
+                    setEditMode(false);
+                } else {
+                    alert('Character not found');
+                    window.location.href = '/dashboard';
+                }
+            } catch (error) {
+                console.error('Error loading character:', error);
+                alert('An error occurred loading the character');
+                window.location.href = '/dashboard';
+            }
+        }
+
+        // Load character data when page loads
+        renderDamageTypeOptions('charResistances');
+        renderDamageTypeOptions('charImmunities');
+        renderDamageTypeOptions('charVulnerabilities');
+        setEditMode(false);
+        loadCharacterData();
+
+        // Skill to ability mapping
+        const SKILL_ABILITY_MAP = {
+            'acrobatics': 'dex',
+            'animalhandling': 'wis',
+            'arcana': 'int',
+            'athletics': 'str',
+            'deception': 'cha',
+            'history': 'int',
+            'insight': 'wis',
+            'intimidation': 'cha',
+            'investigation': 'int',
+            'medicine': 'wis',
+            'nature': 'int',
+            'perception': 'wis',
+            'performance': 'cha',
+            'persuasion': 'cha',
+            'religion': 'int',
+            'sleightofhand': 'dex',
+            'stealth': 'dex',
+            'survival': 'wis'
+        };
+
+        // Class to spellcasting ability mapping
+        const CLASS_SPELLCASTING_ABILITY = {
+            'Bard': 'cha',
+            'Cleric': 'wis',
+            'Druid': 'wis',
+            'Paladin': 'cha',
+            'Ranger': 'wis',
+            'Sorcerer': 'cha',
+            'Warlock': 'cha',
+            'Wizard': 'int',
+            // Non-spellcasting classes
+            'Barbarian': null,
+            'Fighter': null,
+            'Monk': null,
+            'Rogue': null
+        };
+
+        // Class to hit die mapping (D&D 5e)
+        const CLASS_HIT_DIE = {
+            'Barbarian': 12,
+            'Bard': 8,
+            'Cleric': 8,
+            'Druid': 8,
+            'Fighter': 10,
+            'Monk': 8,
+            'Paladin': 10,
+            'Ranger': 10,
+            'Rogue': 8,
+            'Sorcerer': 6,
+            'Warlock': 8,
+            'Wizard': 6
+        };
+
+        // Calculate ability modifiers
+        function calculateModifier(score) {
+            return Math.floor((score - 10) / 2);
+        }
+
+        // Calculate proficiency bonus based on level
+        function calculateProficiencyBonus(level) {
+            return Math.floor((level - 1) / 4) + 2;
+        }
+
+        // Get ability score
+        function getAbilityScore(abilityId) {
+            return parseInt(document.getElementById(abilityId).value) || 10;
+        }
+
+        // Get ability modifier
+        function getAbilityModifier(abilityId) {
+            return calculateModifier(getAbilityScore(abilityId));
+        }
+
+        // Check if proficient in a skill
+        function isProficientInSkill(skillName) {
+            const checkbox = document.querySelector(`input[name="skill"][value="${skillName}"]`);
+            return checkbox ? checkbox.checked : false;
+        }
+
+        // Check if proficient in a saving throw
+        function isProficientInSave(abilityName) {
+            const checkbox = document.querySelector(`input[name="savingThrow"][value="${abilityName}"]`);
+            return checkbox ? checkbox.checked : false;
+        }
+
+        // Format bonus with + or -
+        function formatBonus(value) {
+            return (value >= 0 ? '+' : '') + value;
+        }
+
+        // Calculate suggested HP based on class, level, and CON modifier
+        // Uses average HP progression: Level 1 = max hit die + CON mod, subsequent levels = average of hit die + CON mod
+        function calculateSuggestedHP(charClass, level, conMod) {
+            const hitDie = CLASS_HIT_DIE[charClass];
+            if (!hitDie) return null;
+
+            // Level 1: Max hit die + CON modifier
+            let hp = hitDie + conMod;
+
+            // Subsequent levels: Average of hit die (rounded up) + CON modifier
+            const averageRoll = Math.ceil(hitDie / 2) + 1;
+            for (let i = 2; i <= level; i++) {
+                hp += averageRoll + conMod;
+            }
+
+            return Math.max(1, hp); // Minimum 1 HP
+        }
+
+        // Calculate AC suggestions based on armor type
+        function getACSuggestions(dexMod) {
+            return {
+                unarmored: 10 + dexMod,
+                lightArmor: 11 + dexMod, // Leather armor
+                mediumArmor: 14 + Math.min(dexMod, 2), // Scale mail (max +2 DEX)
+                heavyArmor: 16, // Chain mail (no DEX bonus)
+                shield: 2 // Shield adds +2 to any armor
+            };
+        }
+
+        // Update ability modifier display
+        function updateModifier(abilityId) {
+            const score = getAbilityScore(abilityId);
+            const modifier = calculateModifier(score);
+            const modElement = document.getElementById(abilityId + '-mod');
+            modElement.textContent = formatBonus(modifier);
+        }
+
+        // Update all calculated stats
+        function updateAllCalculatedStats() {
+            const level = parseInt(document.getElementById('level').value) || 1;
+            const profBonus = calculateProficiencyBonus(level);
+            const charClass = document.getElementById('class').value;
+
+            // Update proficiency bonus
+            document.getElementById('profBonus').textContent = formatBonus(profBonus);
+
+            // Update initiative (DEX modifier)
+            const dexMod = getAbilityModifier('dex');
+            document.getElementById('initiative').textContent = formatBonus(dexMod);
+
+            // Update passive perception (10 + WIS mod + prof if proficient in perception)
+            const wisMod = getAbilityModifier('wis');
+            const perceptionProf = isProficientInSkill('perception') ? profBonus : 0;
+            const passivePerception = 10 + wisMod + perceptionProf;
+            document.getElementById('passivePerception').textContent = passivePerception;
+
+            // Update hit die and suggested HP
+            const conMod = getAbilityModifier('con');
+            const hitDie = CLASS_HIT_DIE[charClass];
+            if (hitDie) {
+                document.getElementById('hitDie').textContent = `d${hitDie}`;
+                const suggestedHP = calculateSuggestedHP(charClass, level, conMod);
+                document.getElementById('suggestedHP').textContent = suggestedHP;
+            } else {
+                document.getElementById('hitDie').textContent = '--';
+                document.getElementById('suggestedHP').textContent = '--';
+            }
+
+            // Update AC suggestions
+            const acSuggestions = getACSuggestions(dexMod);
+            const acText = `Unarmored: ${acSuggestions.unarmored} | Light: ${acSuggestions.lightArmor} | Medium: ${acSuggestions.mediumArmor}`;
+            document.getElementById('acSuggestions').textContent = acText;
+
+            // Update attack bonuses
+            const strMod = getAbilityModifier('str');
+            document.getElementById('meleeAttack').textContent = formatBonus(strMod + profBonus);
+            document.getElementById('rangedAttack').textContent = formatBonus(dexMod + profBonus);
+            document.getElementById('finesseAttack').textContent = formatBonus(Math.max(strMod, dexMod) + profBonus);
+
+            // Update spell stats
+            const spellAbility = CLASS_SPELLCASTING_ABILITY[charClass];
+            if (spellAbility) {
+                const spellMod = getAbilityModifier(spellAbility);
+                const spellDC = 8 + profBonus + spellMod;
+                const spellAttack = profBonus + spellMod;
+
+                document.getElementById('spellSaveDC').textContent = spellDC;
+                document.getElementById('spellAttackBonus').textContent = formatBonus(spellAttack);
+                document.getElementById('spellcastingAbility').textContent = spellAbility.toUpperCase();
+            } else {
+                document.getElementById('spellSaveDC').textContent = '--';
+                document.getElementById('spellAttackBonus').textContent = '--';
+                document.getElementById('spellcastingAbility').textContent = 'None';
+            }
+
+            // Update all skill bonuses
+            Object.keys(SKILL_ABILITY_MAP).forEach(skill => {
+                const abilityId = SKILL_ABILITY_MAP[skill];
+                const abilityMod = getAbilityModifier(abilityId);
+                const prof = isProficientInSkill(skill) ? profBonus : 0;
+                const bonus = abilityMod + prof;
+
+                const bonusElement = document.getElementById(`skill-${skill}-bonus`);
+                if (bonusElement) {
+                    bonusElement.textContent = formatBonus(bonus);
+                }
+            });
+
+            // Update all saving throw bonuses
+            ['str', 'dex', 'con', 'int', 'wis', 'cha'].forEach(ability => {
+                const abilityMod = getAbilityModifier(ability);
+                const abilityName = {
+                    'str': 'strength',
+                    'dex': 'dexterity',
+                    'con': 'constitution',
+                    'int': 'intelligence',
+                    'wis': 'wisdom',
+                    'cha': 'charisma'
+                }[ability];
+                const prof = isProficientInSave(abilityName) ? profBonus : 0;
+                const bonus = abilityMod + prof;
+
+                const bonusElement = document.getElementById(`save-${ability}-bonus`);
+                if (bonusElement) {
+                    bonusElement.textContent = formatBonus(bonus);
+                }
+            });
+        }
+
+        // Helper functions to use suggested values
+        function useSuggestedHP() {
+            const suggestedHP = document.getElementById('suggestedHP').textContent;
+            if (suggestedHP && suggestedHP !== '--') {
+                document.getElementById('hp').value = parseInt(suggestedHP);
+            }
+        }
+
+        function useUnarmoredAC() {
+            const dexMod = getAbilityModifier('dex');
+            const unarmoredAC = 10 + dexMod;
+            document.getElementById('ac').value = unarmoredAC;
+        }
+
+        // Update modifiers when ability scores change
+        ['str', 'dex', 'con', 'int', 'wis', 'cha'].forEach(ability => {
+            document.getElementById(ability).addEventListener('input', () => {
+                updateModifier(ability);
+                updateAllCalculatedStats();
+            });
+        });
+
+        // Update calculated stats when level changes
+        document.getElementById('level').addEventListener('input', () => {
+            updateAllCalculatedStats();
+            renderSpellEditor();
+        });
+
+        // Update calculated stats when class changes
+        document.getElementById('class').addEventListener('change', () => {
+            updateAllCalculatedStats();
+            renderSpellEditor();
+        });
+
+        // Update calculated stats when skill proficiencies change
+        document.querySelectorAll('input[name="skill"]').forEach(checkbox => {
+            checkbox.addEventListener('change', updateAllCalculatedStats);
+        });
+
+        // Update calculated stats when saving throw proficiencies change
+        document.querySelectorAll('input[name="savingThrow"]').forEach(checkbox => {
+            checkbox.addEventListener('change', updateAllCalculatedStats);
+        });
+
+        // Profile image handling
+        let profileImageData = null;
+
+        document.getElementById('profileImage').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Check file size (max 2MB)
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('Image too large. Please select an image smaller than 2MB.');
+                    e.target.value = '';
+                    return;
+                }
+
+                // Check file type
+                if (!file.type.startsWith('image/')) {
+                    alert('Please select a valid image file.');
+                    e.target.value = '';
+                    return;
+                }
+
+                // Read and preview the image
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    profileImageData = event.target.result;
+
+                    // Update preview
+                    const preview = document.getElementById('profilePreview');
+                    preview.innerHTML = `<img src="${profileImageData}" alt="Profile Preview">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Handle form submission
+        document.getElementById('characterForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.style.display = 'none';
+
+            // Get user info
+            const userStr = localStorage.getItem('user');
+            if (!userStr) {
+                window.location.href = '/login.html';
+                return;
+            }
+            const user = JSON.parse(userStr);
+
+            // Gather character data
+            // Collect saving throw proficiencies
+            const savingThrows = Array.from(document.querySelectorAll('input[name="savingThrow"]:checked'))
+                .map(cb => cb.value);
+
+            // Collect skill proficiencies
+            const skills = Array.from(document.querySelectorAll('input[name="skill"]:checked'))
+                .map(cb => cb.value);
+
+            const characterData = {
+                userId: user.id,
+                campaignId: campaignId ? parseInt(campaignId) : null,
+                name: document.getElementById('charName').value.trim(),
+                race: document.getElementById('race').value,
+                class: document.getElementById('class').value,
+                level: parseInt(document.getElementById('level').value),
+                background: document.getElementById('background').value.trim(),
+                alignment: document.getElementById('alignment').value,
+                abilities: {
+                    strength: parseInt(document.getElementById('str').value),
+                    dexterity: parseInt(document.getElementById('dex').value),
+                    constitution: parseInt(document.getElementById('con').value),
+                    intelligence: parseInt(document.getElementById('int').value),
+                    wisdom: parseInt(document.getElementById('wis').value),
+                    charisma: parseInt(document.getElementById('cha').value)
+                },
+                savingThrows: savingThrows, // Add saving throw proficiencies
+                skills: skills, // Add skill proficiencies
+                maxHp: parseInt(document.getElementById('hp').value), // Set maxHp from stat sheet
+                ac: parseInt(document.getElementById('ac').value),
+                speed: parseInt(document.getElementById('speed').value),
+                proficiencies: document.getElementById('proficiencies').value.trim(),
+                equipment: currentInventory,
+                inventory: currentInventory,
+                personality: document.getElementById('personality').value.trim(),
+                ideals: document.getElementById('ideals').value.trim(),
+                bonds: document.getElementById('bonds').value.trim(),
+                flaws: document.getElementById('flaws').value.trim(),
+                backstory: document.getElementById('backstory').value.trim(),
+                resistances: getSelectedDamageTypes('charResistances'),
+                immunities: getSelectedDamageTypes('charImmunities'),
+                vulnerabilities: getSelectedDamageTypes('charVulnerabilities'),
+                profileImage: profileImageData, // Add profile image data
+                spells: currentSpells
+            };
+
+            try {
+                const response = await fetch(`/player/${characterId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(characterData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('Character updated successfully!');
+                    window.location.href = '/dashboard';
+                } else {
+                    errorMessage.textContent = data.error || 'Failed to update character';
+                    errorMessage.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                errorMessage.textContent = 'An error occurred. Please try again.';
+                errorMessage.style.display = 'block';
+            }
+        });
+
+        function goToDashboard() {
+            window.location.href = '/dashboard.html';
+        }
+    </script>
+</body>
+</html>

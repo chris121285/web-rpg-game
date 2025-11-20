@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Account | RPG Campaign Manager</title>
+    <style>
+        :root {
+            --night: #030617;
+            --panel: rgba(6, 12, 34, 0.88);
+            --glow-blue: #5ef4ff;
+            --glow-violet: #b786ff;
+            --text: #f5f7ff;
+            font-family: "Crimson Pro", "Cinzel", serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(44, 160, 255, 0.25), transparent 40%),
+                radial-gradient(circle at 80% 10%, rgba(177, 82, 255, 0.25), transparent 50%),
+                linear-gradient(125deg, #040b24, #050315 55%, #100327);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 16px;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
+                radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+            background-size: 160px 160px, 90px 90px;
+            opacity: 0.25;
+            pointer-events: none;
+        }
+
+        .container {
+            width: min(480px, 100%);
+            background: var(--panel);
+            border-radius: 28px;
+            padding: 40px;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 40px 120px rgba(2, 4, 12, 0.8);
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            margin: 0 0 12px;
+            font-size: 32px;
+            font-family: "Cinzel", serif;
+        }
+
+        p.subtitle {
+            margin: 0 0 24px;
+            font-size: 16px;
+            color: rgba(245,247,255,0.75);
+        }
+
+        label {
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-size: 12px;
+            color: rgba(245,247,255,0.7);
+            margin-bottom: 6px;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px 16px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.18);
+            background: rgba(255,255,255,0.08);
+            color: var(--text);
+            font-size: 16px;
+            margin-bottom: 18px;
+            font-family: "Space Grotesk", sans-serif;
+            transition: border 0.3s, box-shadow 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--glow-blue);
+            box-shadow: 0 0 0 3px rgba(94,244,255,0.3);
+            background: rgba(255,255,255,0.15);
+        }
+
+        .hint {
+            font-size: 13px;
+            color: rgba(245,247,255,0.6);
+            margin-top: -12px;
+            margin-bottom: 18px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: 18px;
+            border: none;
+            font-size: 18px;
+            font-weight: 600;
+            background: linear-gradient(120deg, var(--glow-blue), var(--glow-violet));
+            color: #010410;
+            cursor: pointer;
+            font-family: "Cinzel", serif;
+            box-shadow: 0 25px 60px rgba(94, 244, 255, 0.25);
+            transition: transform 0.25s, box-shadow 0.25s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 30px 70px rgba(183, 134, 255, 0.35);
+        }
+
+        .error {
+            display: none;
+            margin-bottom: 18px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 94, 130, 0.4);
+            background: rgba(255, 94, 130, 0.1);
+            color: #ff94ac;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .success {
+            display: none;
+            margin-bottom: 18px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 232, 155, 0.4);
+            background: rgba(255, 232, 155, 0.1);
+            color: var(--gold);
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .switch {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: rgba(245,247,255,0.75);
+        }
+
+        .switch a {
+            color: var(--glow-violet);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .switch a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 520px) {
+            .container {
+                padding: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Join the Guild</h1>
+    <p class="subtitle">Use your email plus a secure passphrase to prep your command console.</p>
+
+    <div class="error" id="errorBox"></div>
+    <div class="success" id="successBox"></div>
+
+    <label for="email">Email Address</label>
+    <input id="email" type="email" placeholder="hero@party.tavern" autocomplete="username" />
+
+    <label for="handle">Adventurer Handle</label>
+    <input id="handle" type="text" placeholder="Elowen the Bold" autocomplete="nickname" />
+
+    <label for="password">Passphrase</label>
+    <input id="password" type="password" placeholder="••••••••" autocomplete="new-password" />
+
+    <label for="confirm">Confirm Passphrase</label>
+    <input id="confirm" type="password" placeholder="••••••••" autocomplete="new-password" />
+
+    <div class="hint">Needs 8+ characters with 1 capital letter and 1 special character.</div>
+
+    <button type="button" onclick="createAccount()">Create Account</button>
+
+    <div class="switch">
+        Already synced? <a href="/login.html">Return to login</a>
+    </div>
+</div>
+
+<script>
+const errorBox = document.getElementById("errorBox");
+const successBox = document.getElementById("successBox");
+
+function showError(message) {
+    errorBox.textContent = message;
+    errorBox.style.display = "block";
+    successBox.style.display = "none";
+}
+
+function showSuccess(message) {
+    successBox.textContent = message;
+    successBox.style.display = "block";
+    errorBox.style.display = "none";
+}
+
+function clearAlerts() {
+    errorBox.style.display = "none";
+    successBox.style.display = "none";
+}
+
+function validateEmail(email) {
+    const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return pattern.test(email);
+}
+
+function validatePassword(password) {
+    const hasLength = password.length >= 8;
+    const hasUpper = /[A-Z]/.test(password);
+    const hasSpecial = /[^A-Za-z0-9]/.test(password);
+    return hasLength && hasUpper && hasSpecial;
+}
+
+async function createAccount() {
+    const email = document.getElementById("email").value.trim().toLowerCase();
+    const handle = document.getElementById("handle").value.trim();
+    const password = document.getElementById("password").value;
+    const confirm = document.getElementById("confirm").value;
+
+    if (!validateEmail(email)) {
+        showError("Please provide a valid email address.");
+        return;
+    }
+
+    if (!handle) {
+        showError("Add an adventurer handle so your party knows who you are.");
+        return;
+    }
+
+    if (!validatePassword(password)) {
+        showError("Password must be 8+ chars with 1 capital and 1 special character.");
+        return;
+    }
+
+    if (password !== confirm) {
+        showError("Passphrases do not match.");
+        return;
+    }
+
+    clearAlerts();
+
+    const response = await fetch("/users/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, username: handle, password })
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+        showError(data.error || "Registration failed. Try again later.");
+        return;
+    }
+
+    showSuccess("Account created! Redirecting to login...");
+    setTimeout(() => window.location.href = "/login.html", 1200);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roll Ability Scores - RPG Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
+            background: radial-gradient(ellipse at top, #1a1f3a 0%, #0d0f1a 100%);
+            color: #e0e6ff;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background:
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.15) 0%, transparent 50%);
+            animation: gradientShift 15s ease infinite;
+            pointer-events: none;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(50px, 50px); }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .title {
+            font-size: 48px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: #a5b4fc;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .controls-section {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #c7d2fe;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(129, 140, 248, 0.2);
+            border-radius: 10px;
+            color: #e0e6ff;
+            font-size: 15px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        select:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(129, 140, 248, 0.5);
+            box-shadow: 0 0 20px rgba(129, 140, 248, 0.2);
+        }
+
+        select option {
+            background: #1a1f3a;
+            color: #e0e6ff;
+        }
+
+        .roll-button {
+            width: 100%;
+            padding: 18px;
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border: none;
+            border-radius: 14px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 10px;
+        }
+
+        .roll-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 36px rgba(99, 102, 241, 0.6);
+        }
+
+        .roll-button:active {
+            transform: translateY(0);
+        }
+
+        .roll-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Dice Container */
+        .dice-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* 3D Dice */
+        .die {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            transform-style: preserve-3d;
+            animation: rollDice 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes rollDice {
+            0% {
+                transform: translate(var(--start-x), var(--start-y)) rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+            }
+            50% {
+                transform: translate(calc(var(--end-x) * 0.5), calc(var(--end-y) * 0.5)) rotateX(720deg) rotateY(720deg) rotateZ(360deg);
+            }
+            100% {
+                transform: translate(var(--end-x), var(--end-y)) rotateX(var(--final-x)) rotateY(var(--final-y)) rotateZ(var(--final-z));
+            }
+        }
+
+        .die-face {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #ffffff, #f0f0f0);
+            border: 2px solid #333;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 800;
+            color: #000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .die-face.front  { transform: translateZ(25px); }
+        .die-face.back   { transform: rotateY(180deg) translateZ(25px); }
+        .die-face.right  { transform: rotateY(90deg) translateZ(25px); }
+        .die-face.left   { transform: rotateY(-90deg) translateZ(25px); }
+        .die-face.top    { transform: rotateX(90deg) translateZ(25px); }
+        .die-face.bottom { transform: rotateX(-90deg) translateZ(25px); }
+
+        /* Results Section */
+        .results-section {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .result-item {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.05));
+            border: 2px solid rgba(129, 140, 248, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .result-item:hover {
+            border-color: rgba(129, 140, 248, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .result-item.used {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .result-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: #818cf8;
+        }
+
+        .result-label {
+            font-size: 11px;
+            color: #a5b4fc;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+
+        /* Ability Scores */
+        .abilities-section {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 30px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #c7d2fe;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .abilities-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .ability-box {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.05));
+            border: 2px solid rgba(129, 140, 248, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .ability-box:hover {
+            border-color: rgba(129, 140, 248, 0.6);
+            box-shadow: 0 0 24px rgba(129, 140, 248, 0.2);
+        }
+
+        .ability-name {
+            font-size: 12px;
+            font-weight: 700;
+            color: #a5b4fc;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .ability-input {
+            width: 100%;
+            text-align: center;
+            font-size: 36px;
+            font-weight: 800;
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(129, 140, 248, 0.3);
+            border-radius: 12px;
+            color: #818cf8;
+            padding: 10px;
+        }
+
+        .ability-input:focus {
+            outline: none;
+            border-color: rgba(129, 140, 248, 0.8);
+            box-shadow: 0 0 20px rgba(129, 140, 248, 0.3);
+        }
+
+        .ability-input::-webkit-outer-spin-button,
+        .ability-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .ability-input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        .ability-description {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 8px;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        .continue-button {
+            width: 100%;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border: none;
+            border-radius: 14px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .continue-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 36px rgba(16, 185, 129, 0.6);
+        }
+
+        @media (max-width: 768px) {
+            .abilities-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .results-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .instructions {
+            background: rgba(167, 139, 250, 0.1);
+            border: 1px solid rgba(167, 139, 250, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #c4b5fd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">🎲 Roll Ability Scores</div>
+            <div class="subtitle">Determine Your Character's Stats</div>
+        </div>
+
+        <div class="controls-section">
+            <div class="control-group">
+                <label for="rollMethod">Rolling Method</label>
+                <select id="rollMethod" onchange="updateSetsVisibility()">
+                    <option value="3d6">3 Dice (3d6)</option>
+                    <option value="4d6-1" selected>4 Dice - Drop Lowest (4d6 drop 1)</option>
+                    <option value="manual">Insert Your Own</option>
+                </select>
+            </div>
+
+            <div class="control-group" id="setsGroup">
+                <label for="setsPerRoll">Sets Per Roll</label>
+                <select id="setsPerRoll">
+                    <option value="1">1 at a Time</option>
+                    <option value="6" selected>All 6 Together</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; text-transform: none;">
+                    <input type="checkbox" id="noNegatives" style="width: 20px; height: 20px; cursor: pointer; accent-color: #818cf8;">
+                    <span>Don't Allow Negatives (Re-roll scores below 10)</span>
+                </label>
+            </div>
+
+            <button class="roll-button" id="rollButton" onclick="rollDice()">🎲 Roll Dice</button>
+        </div>
+
+        <div class="results-section" id="resultsSection" style="display: none;">
+            <div class="section-title">Rolled Values</div>
+            <div class="instructions">Click on a rolled value, then click on an ability score to assign it</div>
+            <div class="results-grid" id="resultsGrid"></div>
+        </div>
+
+        <div class="abilities-section">
+            <div class="section-title">Assign Ability Scores</div>
+            <div class="abilities-grid">
+                <div class="ability-box">
+                    <div class="ability-name">Strength</div>
+                    <input type="number" class="ability-input" id="str" min="1" max="20" value="10" onclick="assignValue('str')">
+                    <div class="ability-description">Melee attacks, Athletics</div>
+                </div>
+                <div class="ability-box">
+                    <div class="ability-name">Dexterity</div>
+                    <input type="number" class="ability-input" id="dex" min="1" max="20" value="10" onclick="assignValue('dex')">
+                    <div class="ability-description">Initiative, AC, Ranged attacks, Acrobatics, Stealth</div>
+                </div>
+                <div class="ability-box">
+                    <div class="ability-name">Constitution</div>
+                    <input type="number" class="ability-input" id="con" min="1" max="20" value="10" onclick="assignValue('con')">
+                    <div class="ability-description">Hit Points, Concentration</div>
+                </div>
+                <div class="ability-box">
+                    <div class="ability-name">Intelligence</div>
+                    <input type="number" class="ability-input" id="int" min="1" max="20" value="10" onclick="assignValue('int')">
+                    <div class="ability-description">Wizard spells, Arcana, History, Investigation</div>
+                </div>
+                <div class="ability-box">
+                    <div class="ability-name">Wisdom</div>
+                    <input type="number" class="ability-input" id="wis" min="1" max="20" value="10" onclick="assignValue('wis')">
+                    <div class="ability-description">Cleric/Druid spells, Perception, Insight, Survival</div>
+                </div>
+                <div class="ability-box">
+                    <div class="ability-name">Charisma</div>
+                    <input type="number" class="ability-input" id="cha" min="1" max="20" value="10" onclick="assignValue('cha')">
+                    <div class="ability-description">Bard/Sorcerer spells, Persuasion, Deception, Performance</div>
+                </div>
+            </div>
+
+            <button class="continue-button" onclick="continueToNextStep()">Continue to Character Creation</button>
+        </div>
+    </div>
+
+    <!-- Dice Container for Animations -->
+    <div class="dice-container" id="diceContainer"></div>
+
+    <script>
+        let rolledValues = [];
+        let selectedValue = null;
+        let usedValues = new Set();
+
+        // Update sets visibility based on roll method
+        function updateSetsVisibility() {
+            const method = document.getElementById('rollMethod').value;
+            const setsGroup = document.getElementById('setsGroup');
+            const rollButton = document.getElementById('rollButton');
+
+            if (method === 'manual') {
+                setsGroup.style.display = 'none';
+                rollButton.style.display = 'none';
+                // Enable all inputs for manual entry
+                document.querySelectorAll('.ability-input').forEach(input => {
+                    input.readOnly = false;
+                });
+            } else {
+                setsGroup.style.display = 'block';
+                rollButton.style.display = 'block';
+            }
+        }
+
+        // Roll a single d6
+        function rollD6() {
+            return Math.floor(Math.random() * 6) + 1;
+        }
+
+        // Roll for one ability score
+        function rollAbilityScore(method) {
+            const noNegatives = document.getElementById('noNegatives').checked;
+            let result;
+
+            // Keep rolling until we get a valid result
+            do {
+                if (method === '3d6') {
+                    // Roll 3d6 and sum
+                    result = rollD6() + rollD6() + rollD6();
+                } else if (method === '4d6-1') {
+                    // Roll 4d6 and drop lowest
+                    const rolls = [rollD6(), rollD6(), rollD6(), rollD6()];
+                    rolls.sort((a, b) => a - b);
+                    result = rolls[1] + rolls[2] + rolls[3]; // Sum the top 3
+                } else {
+                    result = 10;
+                }
+            } while (noNegatives && result < 10);
+
+            return result;
+        }
+
+        // Create animated dice
+        function createAnimatedDice(count, callback) {
+            const container = document.getElementById('diceContainer');
+            container.innerHTML = '';
+
+            const diceValues = [];
+
+            for (let i = 0; i < count; i++) {
+                const die = document.createElement('div');
+                die.className = 'die';
+
+                const value = rollD6();
+                diceValues.push(value);
+
+                // Random start and end positions
+                const startX = Math.random() * window.innerWidth;
+                const startY = -100;
+                const endX = (Math.random() * (window.innerWidth - 100)) + 50;
+                const endY = (Math.random() * (window.innerHeight - 200)) + 100;
+
+                // Random rotation
+                const finalX = Math.random() * 360;
+                const finalY = Math.random() * 360;
+                const finalZ = Math.random() * 360;
+
+                die.style.setProperty('--start-x', `${startX}px`);
+                die.style.setProperty('--start-y', `${startY}px`);
+                die.style.setProperty('--end-x', `${endX}px`);
+                die.style.setProperty('--end-y', `${endY}px`);
+                die.style.setProperty('--final-x', `${finalX}deg`);
+                die.style.setProperty('--final-y', `${finalY}deg`);
+                die.style.setProperty('--final-z', `${finalZ}deg`);
+
+                // Create die faces
+                for (let face = 1; face <= 6; face++) {
+                    const faceDiv = document.createElement('div');
+                    faceDiv.className = `die-face ${['front', 'back', 'right', 'left', 'top', 'bottom'][face-1]}`;
+                    faceDiv.textContent = face;
+                    die.appendChild(faceDiv);
+                }
+
+                container.appendChild(die);
+
+                // Delay each die slightly
+                die.style.animationDelay = `${i * 0.1}s`;
+            }
+
+            // Clear dice after animation
+            setTimeout(() => {
+                container.innerHTML = '';
+                if (callback) callback(diceValues);
+            }, 1800);
+        }
+
+        // Main roll function
+        function rollDice() {
+            const method = document.getElementById('rollMethod').value;
+            const sets = parseInt(document.getElementById('setsPerRoll').value);
+
+            rolledValues = [];
+            usedValues.clear();
+            selectedValue = null;
+
+            const rollButton = document.getElementById('rollButton');
+            rollButton.disabled = true;
+
+            let totalDice = method === '3d6' ? 3 * sets : 4 * sets;
+
+            // Animate dice
+            createAnimatedDice(totalDice, () => {
+                // Calculate actual values
+                for (let i = 0; i < sets; i++) {
+                    const value = rollAbilityScore(method);
+                    rolledValues.push(value);
+                }
+
+                displayResults();
+                rollButton.disabled = false;
+            });
+        }
+
+        // Display rolled results
+        function displayResults() {
+            const resultsSection = document.getElementById('resultsSection');
+            const resultsGrid = document.getElementById('resultsGrid');
+
+            resultsSection.style.display = 'block';
+            resultsGrid.innerHTML = '';
+
+            rolledValues.forEach((value, index) => {
+                const resultItem = document.createElement('div');
+                resultItem.className = 'result-item';
+                resultItem.id = `result-${index}`;
+                resultItem.onclick = () => selectValue(index);
+
+                resultItem.innerHTML = `
+                    <div class="result-value">${value}</div>
+                    <div class="result-label">Click to assign</div>
+                `;
+
+                resultsGrid.appendChild(resultItem);
+            });
+        }
+
+        // Select a rolled value
+        function selectValue(index) {
+            if (usedValues.has(index)) return;
+
+            // Clear previous selection
+            document.querySelectorAll('.result-item').forEach(item => {
+                item.style.borderColor = 'rgba(129, 140, 248, 0.3)';
+            });
+
+            // Highlight selected
+            const item = document.getElementById(`result-${index}`);
+            item.style.borderColor = '#10b981';
+
+            selectedValue = index;
+        }
+
+        // Assign value to ability
+        function assignValue(ability) {
+            if (selectedValue === null) return;
+            if (usedValues.has(selectedValue)) return;
+
+            const input = document.getElementById(ability);
+            input.value = rolledValues[selectedValue];
+
+            // Mark as used
+            usedValues.add(selectedValue);
+            const item = document.getElementById(`result-${selectedValue}`);
+            item.classList.add('used');
+
+            selectedValue = null;
+
+            // Clear all highlights
+            document.querySelectorAll('.result-item').forEach(item => {
+                item.style.borderColor = 'rgba(129, 140, 248, 0.3)';
+            });
+        }
+
+        // Continue to next step
+        function continueToNextStep() {
+            // Save ability scores to character data
+            const abilities = {
+                strength: parseInt(document.getElementById('str').value),
+                dexterity: parseInt(document.getElementById('dex').value),
+                constitution: parseInt(document.getElementById('con').value),
+                intelligence: parseInt(document.getElementById('int').value),
+                wisdom: parseInt(document.getElementById('wis').value),
+                charisma: parseInt(document.getElementById('cha').value)
+            };
+
+            // Store in localStorage for the wizard to pick up
+            localStorage.setItem('rolledAbilities', JSON.stringify(abilities));
+
+            // Get wizard progress and update it
+            const wizardProgress = JSON.parse(localStorage.getItem('wizardProgress') || '{}');
+            wizardProgress.abilities = abilities;
+            localStorage.setItem('wizardProgress', JSON.stringify(wizardProgress));
+            localStorage.setItem('wizardStep', '7'); // Continue to final step
+
+            // Redirect back to wizard
+            window.location.href = '/character-creation-wizard.html?step=7';
+        }
+
+        // Initialize
+        updateSetsVisibility();
+    </script>
+</body>
+</html>

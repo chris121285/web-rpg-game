@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Character - RPG Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
+            background: radial-gradient(ellipse at top, #1a1f3a 0%, #0d0f1a 100%);
+            color: #e0e6ff;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated gradient background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background:
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+            animation: gradientShift 15s ease infinite;
+            pointer-events: none;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(50px, 50px); }
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+        }
+
+        .character-sheet {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .sheet-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid rgba(99, 102, 241, 0.3);
+            position: relative;
+        }
+
+        .sheet-title {
+            font-size: 48px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 40px rgba(129, 140, 248, 0.3);
+        }
+
+        .sheet-subtitle {
+            font-size: 16px;
+            color: #a5b4fc;
+            font-weight: 400;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(129, 140, 248, 0.2);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .section:hover {
+            border-color: rgba(129, 140, 248, 0.4);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #c7d2fe;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .form-grid.two-col {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .form-grid.three-col {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-helper-text {
+            font-size: 12px;
+            color: #a5b4fc;
+            margin-top: 6px;
+        }
+
+        .resistance-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .resistance-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(129, 140, 248, 0.4);
+            background: rgba(129, 140, 248, 0.12);
+            font-size: 13px;
+            color: #e0e6ff;
+        }
+
+        .resistance-chip input {
+            accent-color: #a78bfa;
+        }
+
+        label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #a5b4fc;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input, select, textarea {
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(129, 140, 248, 0.2);
+            border-radius: 10px;
+            color: #e0e6ff;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(129, 140, 248, 0.5);
+            box-shadow: 0 0 20px rgba(129, 140, 248, 0.2);
+        }
+
+        input::placeholder, textarea::placeholder {
+            color: rgba(165, 180, 252, 0.4);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+        }
+
+        .ability-scores {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 16px;
+        }
+
+        .ability-box {
+            text-align: center;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.05));
+            border: 1px solid rgba(129, 140, 248, 0.3);
+            border-radius: 16px;
+            padding: 20px 12px;
+            transition: all 0.3s;
+        }
+
+        .ability-box:hover {
+            border-color: rgba(129, 140, 248, 0.6);
+            box-shadow: 0 0 24px rgba(129, 140, 248, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .ability-name {
+            font-size: 11px;
+            font-weight: 700;
+            color: #a5b4fc;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .ability-input {
+            width: 100%;
+            max-width: 100px;
+            height: 100px;
+            text-align: center;
+            font-size: 36px;
+            font-weight: 800;
+            margin: 0 auto;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(129, 140, 248, 0.3);
+            color: #818cf8;
+            display: block;
+            padding: 8px;
+        }
+
+        .ability-input:focus {
+            border-color: rgba(129, 140, 248, 0.8);
+            box-shadow: 0 0 30px rgba(129, 140, 248, 0.3);
+        }
+
+        /* Remove number input spinners */
+        .ability-input::-webkit-outer-spin-button,
+        .ability-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .ability-input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        .ability-modifier {
+            margin-top: 10px;
+            font-size: 16px;
+            color: #a78bfa;
+            font-weight: 700;
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .skill-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        .skill-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .skill-item label {
+            margin: 0;
+            cursor: pointer;
+            text-transform: none;
+            font-size: 14px;
+        }
+
+        .hp-ac-section {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .stat-box {
+            text-align: center;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.1));
+            border: 2px solid rgba(129, 140, 248, 0.3);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s;
+        }
+
+        .stat-box:hover {
+            border-color: rgba(129, 140, 248, 0.6);
+            box-shadow: 0 0 30px rgba(129, 140, 248, 0.2);
+            transform: translateY(-3px);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #a5b4fc;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-input {
+            width: 100%;
+            max-width: 100px;
+            height: 100px;
+            text-align: center;
+            font-size: 42px;
+            font-weight: 800;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(129, 140, 248, 0.3);
+            border-radius: 12px;
+            color: #818cf8;
+            display: block;
+        }
+
+        .stat-input:focus {
+            border-color: rgba(129, 140, 248, 0.8);
+            box-shadow: 0 0 30px rgba(129, 140, 248, 0.3);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border: none;
+            border-radius: 14px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 36px rgba(99, 102, 241, 0.6);
+            background: linear-gradient(135deg, #818cf8, #a78bfa);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Checkbox Styles */
+        .help-text {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .checkbox-grid.skills-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: rgba(129, 140, 248, 0.05);
+            border: 2px solid rgba(129, 140, 248, 0.2);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .checkbox-item:hover {
+            background: rgba(129, 140, 248, 0.1);
+            border-color: rgba(129, 140, 248, 0.4);
+            transform: translateX(3px);
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #818cf8;
+        }
+
+        .checkbox-item input[type="checkbox"]:checked + span {
+            color: #a5b4fc;
+            font-weight: 600;
+        }
+
+        .checkbox-item span {
+            color: #c7d2fe;
+            font-size: 14px;
+            flex: 1;
+        }
+
+        .checkbox-item span em {
+            color: #94a3b8;
+            font-size: 12px;
+            font-style: italic;
+        }
+
+        .checkbox-item input[type="checkbox"]:checked {
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 768px) {
+            .ability-scores {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .form-grid.two-col,
+            .form-grid.three-col {
+                grid-template-columns: 1fr;
+            }
+
+            .skills-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hp-ac-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            color: #fca5a5;
+            margin-bottom: 20px;
+            display: none;
+            font-weight: 600;
+        }
+
+        select option {
+            background: #1a1f3a;
+            color: #e0e6ff;
+        }
+
+        /* Profile Picture Styles */
+        .profile-upload-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.05));
+            border-radius: 16px;
+            border: 2px dashed rgba(129, 140, 248, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .profile-upload-container:hover {
+            border-color: rgba(129, 140, 248, 0.6);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.08));
+        }
+
+        .profile-preview {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 4px solid rgba(129, 140, 248, 0.4);
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .profile-preview:hover {
+            transform: scale(1.05);
+            border-color: rgba(129, 140, 248, 0.8);
+            box-shadow: 0 12px 48px rgba(129, 140, 248, 0.4);
+        }
+
+        .profile-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-placeholder {
+            font-size: 64px;
+            color: rgba(129, 140, 248, 0.5);
+        }
+
+        .upload-label {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+            color: white;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(129, 140, 248, 0.4);
+        }
+
+        .upload-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(129, 140, 248, 0.6);
+        }
+
+        .upload-label:active {
+            transform: translateY(0);
+        }
+
+        #profileImage {
+            display: none;
+        }
+
+        .upload-hint {
+            font-size: 12px;
+            color: #a5b4fc;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="character-sheet">
+            <div class="sheet-header">
+                <div class="sheet-title">✨ Character Creation</div>
+                <div class="sheet-subtitle">Forge Your Legend</div>
+            </div>
+
+            <div class="error-message" id="errorMessage"></div>
+
+            <form id="characterForm">
+                <!-- Basic Information -->
+                <div class="section">
+                    <div class="section-title">📜 Basic Information</div>
+
+                    <!-- Profile Picture Upload -->
+                    <div class="profile-upload-container" style="margin-bottom: 25px;">
+                        <div class="profile-preview" id="profilePreview">
+                            <div class="profile-placeholder">👤</div>
+                        </div>
+                        <label for="profileImage" class="upload-label">
+                            📸 Upload Profile Picture
+                        </label>
+                        <input type="file" id="profileImage" accept="image/*">
+                        <div class="upload-hint">Recommended: Square image, max 2MB</div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="charName">Character Name *</label>
+                            <input type="text" id="charName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="race">Race *</label>
+                            <select id="race" required>
+                                <option value="">Select Race...</option>
+                                <option value="Human">Human</option>
+                                <option value="Elf">Elf</option>
+                                <option value="Dwarf">Dwarf</option>
+                                <option value="Halfling">Halfling</option>
+                                <option value="Dragonborn">Dragonborn</option>
+                                <option value="Gnome">Gnome</option>
+                                <option value="Half-Elf">Half-Elf</option>
+                                <option value="Half-Orc">Half-Orc</option>
+                                <option value="Tiefling">Tiefling</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="class">Class *</label>
+                            <select id="class" required>
+                                <option value="">Select Class...</option>
+                                <option value="Barbarian">Barbarian</option>
+                                <option value="Bard">Bard</option>
+                                <option value="Cleric">Cleric</option>
+                                <option value="Druid">Druid</option>
+                                <option value="Fighter">Fighter</option>
+                                <option value="Monk">Monk</option>
+                                <option value="Paladin">Paladin</option>
+                                <option value="Ranger">Ranger</option>
+                                <option value="Rogue">Rogue</option>
+                                <option value="Sorcerer">Sorcerer</option>
+                                <option value="Warlock">Warlock</option>
+                                <option value="Wizard">Wizard</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="level">Level *</label>
+                            <input type="number" id="level" min="1" max="20" value="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="background">Background</label>
+                            <input type="text" id="background" placeholder="e.g., Soldier, Sage">
+                        </div>
+                        <div class="form-group">
+                            <label for="alignment">Alignment</label>
+                            <select id="alignment">
+                                <option value="">Select...</option>
+                                <option value="Lawful Good">Lawful Good</option>
+                                <option value="Neutral Good">Neutral Good</option>
+                                <option value="Chaotic Good">Chaotic Good</option>
+                                <option value="Lawful Neutral">Lawful Neutral</option>
+                                <option value="True Neutral">True Neutral</option>
+                                <option value="Chaotic Neutral">Chaotic Neutral</option>
+                                <option value="Lawful Evil">Lawful Evil</option>
+                                <option value="Neutral Evil">Neutral Evil</option>
+                                <option value="Chaotic Evil">Chaotic Evil</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ability Scores -->
+                <div class="section">
+                    <div class="section-title">💪 Ability Scores</div>
+                    <div class="ability-scores">
+                        <div class="ability-box">
+                            <div class="ability-name">Strength</div>
+                            <input type="number" class="ability-input" id="str" min="1" max="30" value="10" required>
+                            <div class="ability-modifier" id="str-mod">+0</div>
+                        </div>
+                        <div class="ability-box">
+                            <div class="ability-name">Dexterity</div>
+                            <input type="number" class="ability-input" id="dex" min="1" max="30" value="10" required>
+                            <div class="ability-modifier" id="dex-mod">+0</div>
+                        </div>
+                        <div class="ability-box">
+                            <div class="ability-name">Constitution</div>
+                            <input type="number" class="ability-input" id="con" min="1" max="30" value="10" required>
+                            <div class="ability-modifier" id="con-mod">+0</div>
+                        </div>
+                        <div class="ability-box">
+                            <div class="ability-name">Intelligence</div>
+                            <input type="number" class="ability-input" id="int" min="1" max="30" value="10" required>
+                            <div class="ability-modifier" id="int-mod">+0</div>
+                        </div>
+                        <div class="ability-box">
+                            <div class="ability-name">Wisdom</div>
+                            <input type="number" class="ability-input" id="wis" min="1" max="30" value="10" required>
+                            <div class="ability-modifier" id="wis-mod">+0</div>
+                        </div>
+                        <div class="ability-box">
+                            <div class="ability-name">Charisma</div>
+                            <input type="number" class="ability-input" id="cha" min="1" max="30" value="10" required>
+                            <div class="ability-modifier" id="cha-mod">+0</div>
+                        </div>
+                </div>
+            </div>
+
+            <!-- Defenses -->
+            <div class="section">
+                <div class="section-title">🛡️ Defenses</div>
+                <div class="form-group">
+                    <label>Damage Resistances</label>
+                    <div class="resistance-grid" id="charResistances"></div>
+                    <div class="form-helper-text">Select all damage types this character resists.</div>
+                </div>
+                <div class="form-group">
+                    <label>Damage Immunities</label>
+                    <div class="resistance-grid" id="charImmunities"></div>
+                    <div class="form-helper-text">Select any damage types this character is immune to.</div>
+                </div>
+                <div class="form-group">
+                    <label>Damage Vulnerabilities</label>
+                    <div class="resistance-grid" id="charVulnerabilities"></div>
+                    <div class="form-helper-text">Select damage types this character is vulnerable to.</div>
+                </div>
+            </div>
+
+            <!-- Combat Stats -->
+            <div class="section">
+                    <div class="section-title">⚔️ Combat Statistics</div>
+                    <div class="hp-ac-section">
+                        <div class="stat-box">
+                            <div class="stat-label">Hit Points</div>
+                            <input type="number" class="stat-input" id="hp" min="1" value="10" required>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Armor Class</div>
+                            <input type="number" class="stat-input" id="ac" min="1" value="10" required>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Speed</div>
+                            <input type="number" class="stat-input" id="speed" min="0" value="30" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Saving Throws -->
+                <div class="section">
+                    <div class="section-title">🛡️ Saving Throw Proficiencies</div>
+                    <div class="help-text">Select which saving throws your character is proficient in (usually 2 from your class)</div>
+                    <div class="checkbox-grid">
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="savingThrow" value="strength">
+                            <span>Strength</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="savingThrow" value="dexterity">
+                            <span>Dexterity</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="savingThrow" value="constitution">
+                            <span>Constitution</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="savingThrow" value="intelligence">
+                            <span>Intelligence</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="savingThrow" value="wisdom">
+                            <span>Wisdom</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="savingThrow" value="charisma">
+                            <span>Charisma</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Skills -->
+                <div class="section">
+                    <div class="section-title">🎯 Skill Proficiencies</div>
+                    <div class="help-text">Select which skills your character is proficient in (usually 2-4 from your class and background)</div>
+                    <div class="checkbox-grid skills-grid">
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="acrobatics">
+                            <span>Acrobatics <em>(DEX)</em></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="animalhandling">
+                            <span>Animal Handling <em>(WIS)</em></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="arcana">
+                            <span>Arcana <em>(INT)</em></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="athletics">
+                            <span>Athletics <em>(STR)</em></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="deception">
+                            <span>Deception <em>(CHA)</em></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="history">
+                            <span>History <em>(INT)</em></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="insight">
+                            <span>Insight <em>(WIS)</em></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="intimidation">
+                            <span>Intimidation <em>(CHA)</em></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="investigation">
+                            <span>Investigation <em>(INT)</em></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="medicine">
+                            <span>Medicine <em>(WIS)</em></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="nature">
+                            <span>Nature <em>(INT)</em></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="perception">
+                            <span>Perception <em>(WIS)</em></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="performance">
+                            <span>Performance <em>(CHA)</em></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="persuasion">
+                            <span>Persuasion <em>(CHA)</em></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="religion">
+                            <span>Religion <em>(INT)</em></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="sleightofhand">
+                            <span>Sleight of Hand <em>(DEX)</em></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="stealth">
+                            <span>Stealth <em>(DEX)</em></span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="skill" value="survival">
+                            <span>Survival <em>(WIS)</em></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Character Details -->
+                <div class="section">
+                    <div class="section-title">✨ Character Details</div>
+                    <div class="form-grid two-col">
+                        <div class="form-group">
+                            <label for="proficiencies">Proficiencies & Languages</label>
+                            <textarea id="proficiencies" placeholder="List your proficiencies, tool proficiencies, and languages..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="equipment">Equipment</label>
+                            <textarea id="equipment" placeholder="List your weapons, armor, and items..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Personality & Backstory -->
+                <div class="section">
+                    <div class="section-title">📖 Personality & Background</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="personality">Personality Traits</label>
+                            <textarea id="personality" placeholder="Describe your character's personality..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="ideals">Ideals</label>
+                            <textarea id="ideals" placeholder="What does your character believe in?"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="bonds">Bonds</label>
+                            <textarea id="bonds" placeholder="Who or what is your character connected to?"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="flaws">Flaws</label>
+                            <textarea id="flaws" placeholder="What are your character's weaknesses?"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 15px;">
+                        <label for="backstory">Backstory</label>
+                        <textarea id="backstory" placeholder="Tell your character's story..." style="min-height: 150px;"></textarea>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn">Create Character</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="damage-types.js"></script>
+    <script>
+        // Get campaign ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const campaignId = urlParams.get('campaignId');
+
+        if (!campaignId) {
+            alert('No campaign specified');
+            window.location.href = '/dashboard';
+        }
+
+        const RESISTANCE_OPTIONS = Array.isArray(window.DAMAGE_TYPES) && window.DAMAGE_TYPES.length
+            ? window.DAMAGE_TYPES
+            : [
+                { id: 'acid', label: 'Acid' },
+                { id: 'bludgeoning', label: 'Bludgeoning' },
+                { id: 'cold', label: 'Cold' },
+                { id: 'fire', label: 'Fire' },
+                { id: 'force', label: 'Force' },
+                { id: 'lightning', label: 'Lightning' },
+                { id: 'necrotic', label: 'Necrotic' },
+                { id: 'piercing', label: 'Piercing' },
+                { id: 'poison', label: 'Poison' },
+                { id: 'psychic', label: 'Psychic' },
+                { id: 'radiant', label: 'Radiant' },
+                { id: 'slashing', label: 'Slashing' },
+                { id: 'thunder', label: 'Thunder' }
+            ];
+
+        function renderDamageTypeOptions(containerId, selected = []) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            const selectedNormalized = (selected || []).map(value => String(value).toLowerCase());
+            container.innerHTML = RESISTANCE_OPTIONS.map(option => {
+                const checked = selectedNormalized.includes(option.id) ? 'checked' : '';
+                return `
+                    <label class="resistance-chip">
+                        <input type="checkbox" value="${option.id}" ${checked}>
+                        ${option.label}
+                    </label>
+                `;
+            }).join('');
+        }
+
+        function getSelectedDamageTypes(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return [];
+            return Array.from(container.querySelectorAll('input[type="checkbox"]:checked'))
+                .map(input => String(input.value).toLowerCase());
+        }
+
+        // Calculate ability modifiers
+        function calculateModifier(score) {
+            return Math.floor((score - 10) / 2);
+        }
+
+        function updateModifier(abilityId) {
+            const score = parseInt(document.getElementById(abilityId).value) || 10;
+            const modifier = calculateModifier(score);
+            const modElement = document.getElementById(abilityId + '-mod');
+            modElement.textContent = (modifier >= 0 ? '+' : '') + modifier;
+        }
+
+        // Update modifiers when ability scores change
+        ['str', 'dex', 'con', 'int', 'wis', 'cha'].forEach(ability => {
+            document.getElementById(ability).addEventListener('input', () => updateModifier(ability));
+        });
+        renderDamageTypeOptions('charResistances');
+        renderDamageTypeOptions('charImmunities');
+        renderDamageTypeOptions('charVulnerabilities');
+
+        // Profile image handling
+        let profileImageData = null;
+
+        document.getElementById('profileImage').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Check file size (max 2MB)
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('Image too large. Please select an image smaller than 2MB.');
+                    e.target.value = '';
+                    return;
+                }
+
+                // Check file type
+                if (!file.type.startsWith('image/')) {
+                    alert('Please select a valid image file.');
+                    e.target.value = '';
+                    return;
+                }
+
+                // Read and preview the image
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    profileImageData = event.target.result;
+
+                    // Update preview
+                    const preview = document.getElementById('profilePreview');
+                    preview.innerHTML = `<img src="${profileImageData}" alt="Profile Preview">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Handle form submission
+        document.getElementById('characterForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.style.display = 'none';
+
+            // Get user info
+            const userStr = localStorage.getItem('user');
+            if (!userStr) {
+                window.location.href = '/login.html';
+                return;
+            }
+            const user = JSON.parse(userStr);
+
+            // Gather character data
+            // Collect saving throw proficiencies
+            const savingThrows = Array.from(document.querySelectorAll('input[name="savingThrow"]:checked'))
+                .map(checkbox => checkbox.value);
+
+            // Collect skill proficiencies
+            const skills = Array.from(document.querySelectorAll('input[name="skill"]:checked'))
+                .map(checkbox => checkbox.value);
+
+            const characterData = {
+                userId: user.id,
+                campaignId: parseInt(campaignId),
+                name: document.getElementById('charName').value.trim(),
+                race: document.getElementById('race').value,
+                class: document.getElementById('class').value,
+                level: parseInt(document.getElementById('level').value),
+                background: document.getElementById('background').value.trim(),
+                alignment: document.getElementById('alignment').value,
+                abilities: {
+                    strength: parseInt(document.getElementById('str').value),
+                    dexterity: parseInt(document.getElementById('dex').value),
+                    constitution: parseInt(document.getElementById('con').value),
+                    intelligence: parseInt(document.getElementById('int').value),
+                    wisdom: parseInt(document.getElementById('wis').value),
+                    charisma: parseInt(document.getElementById('cha').value)
+                },
+                savingThrows: savingThrows, // Add saving throw proficiencies
+                skills: skills, // Add skill proficiencies
+                maxHp: parseInt(document.getElementById('hp').value), // Max HP from stat sheet
+                hp: parseInt(document.getElementById('hp').value), // Current HP starts at max
+                ac: parseInt(document.getElementById('ac').value),
+                speed: parseInt(document.getElementById('speed').value),
+                proficiencies: document.getElementById('proficiencies').value.trim(),
+                equipment: document.getElementById('equipment').value.trim(),
+                personality: document.getElementById('personality').value.trim(),
+                ideals: document.getElementById('ideals').value.trim(),
+                bonds: document.getElementById('bonds').value.trim(),
+                flaws: document.getElementById('flaws').value.trim(),
+                backstory: document.getElementById('backstory').value.trim(),
+                resistances: getSelectedDamageTypes('charResistances'),
+                immunities: getSelectedDamageTypes('charImmunities'),
+                vulnerabilities: getSelectedDamageTypes('charVulnerabilities'),
+                profileImage: profileImageData // Add profile image data
+            };
+            const dexScore = characterData.abilities.dexterity || 10;
+            characterData.initiative = Math.floor((dexScore - 10) / 2);
+
+            try {
+                const response = await fetch('/player', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(characterData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('Character created successfully!');
+                    window.location.href = '/dashboard';
+                } else {
+                    errorMessage.textContent = data.error || 'Failed to create character';
+                    errorMessage.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                errorMessage.textContent = 'An error occurred. Please try again.';
+                errorMessage.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
